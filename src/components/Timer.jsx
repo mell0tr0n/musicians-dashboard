@@ -1,11 +1,23 @@
-// src/components/Timer.js
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+} from '@mui/material';
 
-const Timer = ({ onStop }) => {
+const Timer = ({ onStop, onSave, existingProjects = [] }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState('');
+  const [newProject, setNewProject] = useState('');
 
   useEffect(() => {
     return () => clearInterval(intervalId);
@@ -43,6 +55,28 @@ const Timer = ({ onStop }) => {
     return `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
   };
 
+  const handleSaveClick = () => {
+    if (elapsed > 0) {
+      setDialogOpen(true);
+    } else {
+      alert('You must run the timer before saving.');
+    }
+  };
+
+  const handleConfirmSave = () => {
+    const title = newProject.trim() || selectedProject;
+    if (!title) {
+      alert('Please enter or select a project name.');
+      return;
+    }
+    if (onSave) {
+      onSave({ duration: elapsed, title });
+    }
+    setDialogOpen(false);
+    setNewProject('');
+    setSelectedProject('');
+  };
+
   return (
     <Box
       sx={{
@@ -63,27 +97,60 @@ const Timer = ({ onStop }) => {
         {formatTime(elapsed)}
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-        <Button
-          variant="contained"
-          onClick={start}
-          disabled={isRunning}
-          color="primary"
-        >
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Button variant="contained" onClick={start} disabled={isRunning}>
           Start
         </Button>
-        <Button
-          variant="contained"
-          onClick={stop}
-          disabled={!isRunning}
-          color="secondary"
-        >
+        <Button variant="contained" onClick={stop} disabled={!isRunning}>
           Stop
         </Button>
         <Button variant="outlined" onClick={reset}>
           Reset
         </Button>
+        <Button variant="contained" color="success" onClick={handleSaveClick}>
+          Save
+        </Button>
       </Box>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>Save Practice Session</DialogTitle>
+        <DialogContent>
+          <TextField
+            select
+            label="Select Existing Project"
+            value={selectedProject}
+            onChange={(e) => {
+              setSelectedProject(e.target.value);
+              setNewProject('');
+            }}
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="">-- None --</MenuItem>
+            {existingProjects.map((proj, i) => (
+              <MenuItem key={i} value={proj}>
+                {proj}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Or Enter New Project Name"
+            value={newProject}
+            onChange={(e) => {
+              setNewProject(e.target.value);
+              setSelectedProject('');
+            }}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmSave} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
