@@ -1,10 +1,14 @@
+// eslint.config.js
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
+  // Ignore build output
   { ignores: ['dist'] },
+
+  // Base config for JS/JSX files
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -28,6 +32,23 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+    },
+  },
+
+  // Additional config for test files using Vitest
+  {
+    files: ['**/*.test.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        vi: 'readonly',
+      },
     },
   },
 ]
