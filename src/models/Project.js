@@ -6,6 +6,8 @@ export class Project {
     this.notes = notes;
     this.createdAt = new Date();
     this.lastUpdated = new Date();
+    this.totalDuration = 0; // in milliseconds
+
   }
 
   update({ title, chordsUrl, tags, notes }) {
@@ -16,26 +18,35 @@ export class Project {
     this.lastUpdated = new Date();
   }
 
-  toJSON() {
+    toJSON() {
     return {
-      title: this.title,
-      chordsUrl: this.chordsUrl,
-      tags: this.tags,
-      notes: this.notes,
-      createdAt: this.createdAt.toISOString(),
-      lastUpdated: this.lastUpdated.toISOString(),
+        title: this.title,
+        chordsUrl: this.chordsUrl,
+        tags: this.tags,
+        notes: this.notes,
+        createdAt: this.createdAt.toISOString(),
+        lastUpdated: this.lastUpdated.toISOString(),
+        totalDuration: this.totalDuration,
     };
-  }
+    }
 
-  static fromJSON(json) {
+    static fromJSON(json) {
     const obj = new Project(
-      json.title,
-      json.chordsUrl,
-      json.tags || [],
-      json.notes || ''
+        json.title,
+        json.chordsUrl,
+        json.tags || [],
+        json.notes || ''
     );
     obj.createdAt = new Date(json.createdAt);
     obj.lastUpdated = new Date(json.lastUpdated);
+    obj.totalDuration = json.totalDuration || 0;
     return obj;
-  }
+    }
+
+    //helper method for pracice duration
+    addPracticeDuration(ms) {
+        this.totalDuration += ms;
+        this.lastUpdated = new Date();
+    }
+
 }

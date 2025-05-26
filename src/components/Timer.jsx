@@ -11,7 +11,7 @@ import {
   MenuItem,
 } from '@mui/material';
 
-const Timer = ({ onStop, onSave, existingProjects = [] }) => {
+const Timer = ({ onStop, onSave, projects = [] }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
@@ -127,11 +127,11 @@ const Timer = ({ onStop, onSave, existingProjects = [] }) => {
             sx={{ mb: 2 }}
           >
             <MenuItem value="">-- None --</MenuItem>
-            {existingProjects.map((proj, i) => (
-              <MenuItem key={i} value={proj}>
-                {proj}
-              </MenuItem>
-            ))}
+            {projects.map((proj, i) => (
+              <MenuItem key={i} value={proj.title}>
+                {proj.title}
+                </MenuItem>
+              ))}
           </TextField>
 
           <TextField
