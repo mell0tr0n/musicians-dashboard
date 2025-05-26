@@ -30,6 +30,14 @@ const ProjectList = () => {
   const [titleError, setTitleError] = useState('');
   const [urlError, setUrlError] = useState('');
 
+  const [editIndex, setEditIndex] = useState(null);
+  
+  // For editing fields
+  const [editTitle, setEditTitle] = useState('');
+  const [editUrl, setEditUrl] = useState('');
+  const [editTags, setEditTags] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+
     // Helper function to validate URL
   function isValidHttpUrl(string) {
     try {
@@ -91,6 +99,37 @@ const ProjectList = () => {
   setShowForm(false);
 };
 
+//helper functions
+const handleEdit = (index) => {
+  const project = projects[index];
+  setEditTitle(project.title);
+  setEditUrl(project.chordsUrl);
+  setEditTags(project.tags.join(', '));
+  setEditNotes(project.notes);
+  setEditIndex(index);
+};
+
+const handleSaveEdit = (index) => {
+  const updated = [...projects];
+  updated[index].update({
+    title: editTitle.trim(),
+    chordsUrl: editUrl.trim(),
+    tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
+    notes: editNotes.trim(),
+  });
+  setProjects(updated);
+  setEditIndex(null);
+};
+
+const handleDelete = (index) => {
+  const confirm = window.confirm("Delete this project?");
+  if (!confirm) return;
+  const updated = projects.filter((_, i) => i !== index);
+  setProjects(updated);
+  setExpandedIndex(null);
+};
+
+
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -113,27 +152,94 @@ const ProjectList = () => {
             </ListItem>
 
             <Collapse in={expandedIndex === index} timeout="auto" unmountOnExit>
-              <Box sx={{ px: 2, pb: 2 }}>
-                {project.tags.length > 0 && (
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Tags:</strong> {project.tags.join(', ')}
-                  </Typography>
-                )}
-                {project.notes && (
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Notes:</strong> {project.notes}
-                  </Typography>
-                )}
-                {project.chordsUrl && (
-                  <Typography variant="body2">
-                    <strong>Chords/Lyrics:</strong>{' '}
-                    <Link href={project.chordsUrl} target="_blank" rel="noopener">
-                      {project.chordsUrl}
-                    </Link>
-                  </Typography>
-                )}
-              </Box>
-            </Collapse>
+  <Box sx={{ px: 2, pb: 2 }}>
+    {editIndex === index ? (
+      <>
+        <TextField
+          label="Title"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          fullWidth
+          sx={{ mb: 1 }}
+        />
+        <TextField
+          label="Chords/Lyrics URL"
+          value={editUrl}
+          onChange={(e) => setEditUrl(e.target.value)}
+          fullWidth
+          sx={{ mb: 1 }}
+        />
+        <TextField
+          label="Tags (comma separated)"
+          value={editTags}
+          onChange={(e) => setEditTags(e.target.value)}
+          fullWidth
+          sx={{ mb: 1 }}
+        />
+        <TextField
+          label="Notes"
+          value={editNotes}
+          onChange={(e) => setEditNotes(e.target.value)}
+          fullWidth
+          multiline
+          rows={2}
+          sx={{ mb: 1 }}
+        />
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="contained"
+            onClick={() => handleSaveEdit(index)}
+            color="primary"
+          >
+            Save
+          </Button>
+          <Button variant="outlined" onClick={() => setEditIndex(null)}>
+            Cancel
+          </Button>
+        </Box>
+      </>
+    ) : (
+      <>
+        {project.tags.length > 0 && (
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Tags:</strong> {project.tags.join(', ')}
+          </Typography>
+        )}
+        {project.notes && (
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Notes:</strong> {project.notes}
+          </Typography>
+        )}
+        {project.chordsUrl && (
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Chords/Lyrics:</strong>{' '}
+            <Link href={project.chordsUrl} target="_blank" rel="noopener">
+              {project.chordsUrl}
+            </Link>
+          </Typography>
+        )}
+        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={() => handleEdit(index)}
+            size="small"
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => handleDelete(index)}
+            size="small"
+          >
+            Delete
+          </Button>
+        </Box>
+      </>
+    )}
+  </Box>
+</Collapse>
+
 
             <Divider component="li" />
           </React.Fragment>
