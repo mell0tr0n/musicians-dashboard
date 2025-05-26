@@ -1,6 +1,7 @@
 import React from 'react';
 import Timer from './components/Timer';
 import { Container, Typography } from '@mui/material';
+import ProjectList from './components/ProjectList';
 
 const existingProjects = ['Etude in G', 'Scales Practice', 'Chord Drills'];
 
@@ -16,6 +17,7 @@ const App = () => {
         Musician's Dashboard
       </Typography>
       <Timer onSave={handleSave} existingProjects={existingProjects} />
+      <ProjectList />
     </Container>
   );
 };
