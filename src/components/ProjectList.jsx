@@ -27,6 +27,19 @@ const ProjectList = () => {
   const [tags, setTags] = useState('');
   const [notes, setNotes] = useState('');
 
+  const [titleError, setTitleError] = useState('');
+  const [urlError, setUrlError] = useState('');
+
+    // Helper function to validate URL
+  function isValidHttpUrl(string) {
+    try {
+      const url = new URL(string);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Load from localStorage
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
@@ -40,20 +53,44 @@ const ProjectList = () => {
   }, [projects]);
 
   const handleAddProject = () => {
-    if (!title.trim()) return;
-    const newProject = new Project(
-      title.trim(),
-      chordsUrl.trim(),
-      tags.split(',').map(t => t.trim()).filter(Boolean),
-      notes.trim()
-    );
-    setProjects([newProject, ...projects]);
-    setTitle('');
-    setChordsUrl('');
-    setTags('');
-    setNotes('');
-    setShowForm(false);
-  };
+  let valid = true;
+
+  if (!title.trim()) {
+    setTitleError("Title is required.");
+    valid = false;
+  } else if (projects.some(p => p.title.toLowerCase() === title.trim().toLowerCase())) {
+    setTitleError("A project with this title already exists.");
+    valid = false;
+  } else {
+    setTitleError('');
+  }
+
+  if (chordsUrl.trim() && !isValidHttpUrl(chordsUrl.trim())) {
+    setUrlError("Please enter a valid URL.");
+    valid = false;
+  } else {
+    setUrlError('');
+  }
+
+  if (!valid) return;
+
+  const newProject = new Project(
+    title.trim(),
+    chordsUrl.trim(),
+    tags.split(',').map(t => t.trim()).filter(Boolean),
+    notes.trim()
+  );
+
+  setProjects([newProject, ...projects]);
+  setTitle('');
+  setChordsUrl('');
+  setTags('');
+  setNotes('');
+  setTitleError('');
+  setUrlError('');
+  setShowForm(false);
+};
+
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -114,18 +151,23 @@ const ProjectList = () => {
 
       <Collapse in={showForm}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Chords/Lyrics URL"
-            value={chordsUrl}
-            onChange={(e) => setChordsUrl(e.target.value)}
-            fullWidth
-          />
+            <TextField
+                label="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                error={!!titleError}
+                helperText={titleError}
+                fullWidth
+            />
+
+            <TextField
+                label="Chords/Lyrics URL"
+                value={chordsUrl}
+                onChange={(e) => setChordsUrl(e.target.value)}
+                error={!!urlError}
+                helperText={urlError}
+                fullWidth
+            />
           <TextField
             label="Tags (comma separated)"
             value={tags}
