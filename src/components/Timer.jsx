@@ -10,6 +10,7 @@ import {
   TextField,
   MenuItem,
 } from '@mui/material';
+import { formatDuration } from '../utils/formatDuration';
 
 const Timer = ({ onStop, onSave, projects = [] }) => {
   const [isRunning, setIsRunning] = useState(false);
@@ -48,33 +49,30 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
     setElapsed(0);
   };
 
-  const formatTime = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
-  };
-
   const handleSaveClick = () => {
     if (elapsed > 0) {
       setDialogOpen(true);
+      setSelectedProject('');
+      setNewProject('');
     } else {
       alert('You must run the timer before saving.');
     }
   };
 
   const handleConfirmSave = () => {
-    const title = newProject.trim() || selectedProject;
+    const title =
+      selectedProject === '__new__' ? newProject.trim() : selectedProject;
+
     if (!title) {
       alert('Please enter or select a project name.');
       return;
     }
-    if (onSave) {
-      onSave({ duration: elapsed, title });
-    }
+
+    onSave({ title, duration: elapsed });
     setDialogOpen(false);
-    setNewProject('');
     setSelectedProject('');
+    setNewProject('');
+    reset(); // optionally reset the timer after save
   };
 
   return (
@@ -94,10 +92,12 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
       </Typography>
 
       <Typography variant="h3" sx={{ my: 2 }}>
-        {formatTime(elapsed)}
+        {formatDuration(elapsed)}
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}
+      >
         <Button variant="contained" onClick={start} disabled={isRunning}>
           Start
         </Button>
@@ -117,32 +117,35 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
         <DialogContent>
           <TextField
             select
-            label="Select Existing Project"
+            label="Select Project"
             value={selectedProject}
-            onChange={(e) => {
-              setSelectedProject(e.target.value);
-              setNewProject('');
-            }}
+            onChange={(e) => setSelectedProject(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
           >
-            <MenuItem value="">-- None --</MenuItem>
+            <MenuItem value="__new__">Create New Project</MenuItem>
             {projects.map((proj, i) => (
               <MenuItem key={i} value={proj.title}>
                 {proj.title}
-                </MenuItem>
-              ))}
+              </MenuItem>
+            ))}
           </TextField>
 
-          <TextField
-            label="Or Enter New Project Name"
-            value={newProject}
-            onChange={(e) => {
-              setNewProject(e.target.value);
-              setSelectedProject('');
-            }}
-            fullWidth
-          />
+          {selectedProject && (
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Practice Session: {new Date().toLocaleDateString()} –{' '}
+              {formatDuration(elapsed)}
+            </Typography>
+          )}
+
+          {selectedProject === '__new__' && (
+            <TextField
+              label="New Project Title"
+              value={newProject}
+              onChange={(e) => setNewProject(e.target.value)}
+              fullWidth
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>

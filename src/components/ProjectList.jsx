@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,22 +14,19 @@ import {
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Project } from '../models/Project';
+import { formatDuration } from '../utils/formatDuration';
 
-const LOCAL_STORAGE_KEY = 'projects';
-
-const ProjectList = () => {
-  const [projects, setProjects] = useState([]);
+const ProjectList = ({ projects, setProjects }) => {
   const [showForm, setShowForm] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [sessionsVisible, setSessionsVisible] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
 
-  // Form values
   const [title, setTitle] = useState('');
   const [chordsUrl, setChordsUrl] = useState('');
   const [tags, setTags] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Edit form
   const [editTitle, setEditTitle] = useState('');
   const [editUrl, setEditUrl] = useState('');
   const [editTags, setEditTags] = useState('');
@@ -37,18 +34,6 @@ const ProjectList = () => {
 
   const [titleError, setTitleError] = useState('');
   const [urlError, setUrlError] = useState('');
-
-  // Load from localStorage
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-    const loaded = stored.map(Project.fromJSON);
-    setProjects(loaded);
-  }, []);
-
-  // Save to localStorage on update
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(projects.map(p => p.toJSON())));
-  }, [projects]);
 
   const isValidHttpUrl = (string) => {
     try {
@@ -88,7 +73,8 @@ const ProjectList = () => {
       notes.trim()
     );
 
-    setProjects([newProject, ...projects]);
+    const updated = [newProject, ...projects];
+    setProjects(updated);
     setTitle('');
     setChordsUrl('');
     setTags('');
@@ -179,11 +165,7 @@ const ProjectList = () => {
                       sx={{ mb: 1 }}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        onClick={() => handleSaveEdit(index)}
-                        color="primary"
-                      >
+                      <Button variant="contained" onClick={() => handleSaveEdit(index)} color="primary">
                         Save
                       </Button>
                       <Button variant="outlined" onClick={() => setEditIndex(null)}>
@@ -193,38 +175,110 @@ const ProjectList = () => {
                   </>
                 ) : (
                   <>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      <strong>Total Practice Time:</strong>{' '}
-                      {Math.floor(project.totalDuration / 60000)} minutes
-                    </Typography>
-                    {project.notes && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Notes:</strong> {project.notes}
-                      </Typography>
+                    {project.practiceSessions.length > 0 && (
+                      <>
+                        <ListItem disablePadding sx={{ pl: 2 }}>
+                          <ListItemButton
+                            onClick={() =>
+                              setSessionsVisible(sessionsVisible === `${index}-sessions` ? null : `${index}-sessions`)
+                            }
+                            sx={{ pl: 0 }}
+                          >
+                            <ListItemText
+                              primary={`Practice Sessions: ${project.practiceSessions.length}`}
+                            />
+                            {sessionsVisible === `${index}-sessions` ? <ExpandLess /> : <ExpandMore />}
+                          </ListItemButton>
+                        </ListItem>
+                        <Collapse in={sessionsVisible === `${index}-sessions`} timeout="auto" unmountOnExit>
+                          <List dense sx={{ pl: 4 }}>
+                            {project.practiceSessions.map((session, i) => {
+                              const date = new Date(session.startTime);
+                              const formattedDate = date.toLocaleDateString();
+                              const formattedTime = new Date(session.duration)
+                                .toISOString()
+                                .substr(11, 8);
+                              return (
+                                <ListItem key={i} sx={{ pl: 0 }}>
+                                  <ListItemText primary={`${formattedDate} — ${formattedTime}`} />
+                                </ListItem>
+                              );
+                            })}
+                          </List>
+                        </Collapse>
+                      </>
                     )}
-                    {project.tags.length > 0 && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Tags:</strong> {project.tags.join(', ')}
-                      </Typography>
-                    )}
+
                     {project.chordsUrl && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Chords/Lyrics:</strong>{' '}
-                        <Link href={project.chordsUrl} target="_blank" rel="noopener">
-                          {project.chordsUrl}
-                        </Link>
-                      </Typography>
+                      <>
+                        <ListItem disablePadding sx={{ pl: 2 }}>
+                          <ListItemButton
+                            onClick={() =>
+                              setSessionsVisible(sessionsVisible === `${index}-chords` ? null : `${index}-chords`)
+                            }
+                            sx={{ pl: 0 }}
+                          >
+                            <ListItemText primary="Chords / Lyrics" />
+                            {sessionsVisible === `${index}-chords` ? <ExpandLess /> : <ExpandMore />}
+                          </ListItemButton>
+                        </ListItem>
+                        <Collapse in={sessionsVisible === `${index}-chords`} timeout="auto" unmountOnExit>
+                          <Box sx={{ pl: 4, pb: 1 }}>
+                            <Link href={project.chordsUrl} target="_blank" rel="noopener">
+                              {project.chordsUrl}
+                            </Link>
+                          </Box>
+                        </Collapse>
+                      </>
                     )}
+
+                    {project.notes && (
+                      <>
+                        <ListItem disablePadding sx={{ pl: 2 }}>
+                          <ListItemButton
+                            onClick={() =>
+                              setSessionsVisible(sessionsVisible === `${index}-notes` ? null : `${index}-notes`)
+                            }
+                            sx={{ pl: 0 }}
+                          >
+                            <ListItemText primary="Notes" />
+                            {sessionsVisible === `${index}-notes` ? <ExpandLess /> : <ExpandMore />}
+                          </ListItemButton>
+                        </ListItem>
+                        <Collapse in={sessionsVisible === `${index}-notes`} timeout="auto" unmountOnExit>
+                          <Box sx={{ pl: 4, pb: 1 }}>
+                            <Typography variant="body2">{project.notes}</Typography>
+                          </Box>
+                        </Collapse>
+                      </>
+                    )}
+
+                    {project.tags.length > 0 && (
+                      <>
+                        <ListItem disablePadding sx={{ pl: 2 }}>
+                          <ListItemButton
+                            onClick={() =>
+                              setSessionsVisible(sessionsVisible === `${index}-tags` ? null : `${index}-tags`)
+                            }
+                            sx={{ pl: 0 }}
+                          >
+                            <ListItemText primary="Tags" />
+                            {sessionsVisible === `${index}-tags` ? <ExpandLess /> : <ExpandMore />}
+                          </ListItemButton>
+                        </ListItem>
+                        <Collapse in={sessionsVisible === `${index}-tags`} timeout="auto" unmountOnExit>
+                          <Box sx={{ pl: 4, pb: 1 }}>
+                            <Typography variant="body2">{project.tags.join(', ')}</Typography>
+                          </Box>
+                        </Collapse>
+                      </>
+                    )}
+
                     <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                       <Button variant="outlined" onClick={() => handleEdit(index)} size="small">
                         Edit
                       </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleDelete(index)}
-                        size="small"
-                      >
+                      <Button variant="outlined" color="error" onClick={() => handleDelete(index)} size="small">
                         Delete
                       </Button>
                     </Box>
@@ -232,7 +286,6 @@ const ProjectList = () => {
                 )}
               </Box>
             </Collapse>
-
             <Divider component="li" />
           </React.Fragment>
         ))}
