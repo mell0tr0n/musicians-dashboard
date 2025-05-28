@@ -10,6 +10,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme/theme';
 import { CssBaseline, Typography, Box, Paper } from '@mui/material';
 
+import { mockProjects } from './data/mockProjects';
+
 const LOCAL_STORAGE_KEY = 'projects';
 
 const App = () => {
@@ -65,11 +67,18 @@ const App = () => {
           Musician’s Dashboard
         </Typography>
 
-        <Paper elevation={3} sx={{ p: 3, my: 4 }}>
+        <Paper elevation={3} sx={{ p: 3, my: 3 }}>
           <Timer onSave={handleSaveSession} projects={projects} />
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3, my: 4 }}>
+        <Paper
+          elevation={3}
+          sx={{
+            px: 5,
+            py: 1,
+            my: 0,
+          }}
+        >
           <ProjectList projects={projects} setProjects={setProjects} />
         </Paper>
       </Box>

@@ -124,9 +124,17 @@ const ProjectList = ({ projects, setProjects }) => {
 
   return (
     <Box sx={{ mt: 5 }}>
-      <Typography variant="h5" gutterBottom>
-        Your Projects
-      </Typography>
+      <Box
+        sx={{
+          width: '100%',
+          textAlign: 'center',
+          marginBottom: 3,
+        }}
+      >
+        <Typography variant="h5" component="h2">
+          Your Projects
+        </Typography>
+      </Box>
 
       <List sx={{ mb: 2 }}>
         {projects.map((project, index) => (
