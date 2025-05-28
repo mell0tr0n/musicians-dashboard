@@ -78,13 +78,12 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
   return (
     <Box
       sx={{
-        p: 3,
-        m: '2rem auto',
-        maxWidth: '400px',
+        width: '100%',
         textAlign: 'center',
-        border: '1px solid #ccc',
-        borderRadius: '12px',
-        backgroundColor: '#f9f9f9',
+        p: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
       }}
     >
       <Typography variant="h5" gutterBottom>
@@ -96,7 +95,12 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
       </Typography>
 
       <Box
-        sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 2,
+          flexWrap: 'wrap',
+        }}
       >
         <Button variant="contained" onClick={start} disabled={isRunning}>
           Start
@@ -149,7 +153,11 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmSave} variant="contained" color="primary">
+          <Button
+            onClick={handleConfirmSave}
+            variant="contained"
+            color="primary"
+          >
             Save
           </Button>
         </DialogActions>

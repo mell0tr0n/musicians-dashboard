@@ -48,17 +48,19 @@ const ProjectList = ({ projects, setProjects }) => {
     let valid = true;
 
     if (!title.trim()) {
-      setTitleError("Title is required.");
+      setTitleError('Title is required.');
       valid = false;
-    } else if (projects.some(p => p.title.toLowerCase() === title.trim().toLowerCase())) {
-      setTitleError("A project with this title already exists.");
+    } else if (
+      projects.some((p) => p.title.toLowerCase() === title.trim().toLowerCase())
+    ) {
+      setTitleError('A project with this title already exists.');
       valid = false;
     } else {
       setTitleError('');
     }
 
     if (chordsUrl.trim() && !isValidHttpUrl(chordsUrl.trim())) {
-      setUrlError("Please enter a valid URL.");
+      setUrlError('Please enter a valid URL.');
       valid = false;
     } else {
       setUrlError('');
@@ -69,7 +71,10 @@ const ProjectList = ({ projects, setProjects }) => {
     const newProject = new Project(
       title.trim(),
       chordsUrl.trim(),
-      tags.split(',').map(t => t.trim()).filter(Boolean),
+      tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       notes.trim()
     );
 
@@ -96,7 +101,10 @@ const ProjectList = ({ projects, setProjects }) => {
     updated[index].update({
       title: editTitle.trim(),
       chordsUrl: editUrl.trim(),
-      tags: editTags.split(',').map(t => t.trim()).filter(Boolean),
+      tags: editTags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       notes: editNotes.trim(),
     });
     setProjects(updated);
@@ -104,7 +112,7 @@ const ProjectList = ({ projects, setProjects }) => {
   };
 
   const handleDelete = (index) => {
-    if (!window.confirm("Delete this project?")) return;
+    if (!window.confirm('Delete this project?')) return;
     const updated = projects.filter((_, i) => i !== index);
     setProjects(updated);
     setExpandedIndex(null);
@@ -165,10 +173,17 @@ const ProjectList = ({ projects, setProjects }) => {
                       sx={{ mb: 1 }}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button variant="contained" onClick={() => handleSaveEdit(index)} color="primary">
+                      <Button
+                        variant="contained"
+                        onClick={() => handleSaveEdit(index)}
+                        color="primary"
+                      >
                         Save
                       </Button>
-                      <Button variant="outlined" onClick={() => setEditIndex(null)}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setEditIndex(null)}
+                      >
                         Cancel
                       </Button>
                     </Box>
@@ -180,17 +195,29 @@ const ProjectList = ({ projects, setProjects }) => {
                         <ListItem disablePadding sx={{ pl: 2 }}>
                           <ListItemButton
                             onClick={() =>
-                              setSessionsVisible(sessionsVisible === `${index}-sessions` ? null : `${index}-sessions`)
+                              setSessionsVisible(
+                                sessionsVisible === `${index}-sessions`
+                                  ? null
+                                  : `${index}-sessions`
+                              )
                             }
                             sx={{ pl: 0 }}
                           >
                             <ListItemText
                               primary={`Practice Sessions: ${project.practiceSessions.length}`}
                             />
-                            {sessionsVisible === `${index}-sessions` ? <ExpandLess /> : <ExpandMore />}
+                            {sessionsVisible === `${index}-sessions` ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )}
                           </ListItemButton>
                         </ListItem>
-                        <Collapse in={sessionsVisible === `${index}-sessions`} timeout="auto" unmountOnExit>
+                        <Collapse
+                          in={sessionsVisible === `${index}-sessions`}
+                          timeout="auto"
+                          unmountOnExit
+                        >
                           <List dense sx={{ pl: 4 }}>
                             {project.practiceSessions.map((session, i) => {
                               const date = new Date(session.startTime);
@@ -200,7 +227,9 @@ const ProjectList = ({ projects, setProjects }) => {
                                 .substr(11, 8);
                               return (
                                 <ListItem key={i} sx={{ pl: 0 }}>
-                                  <ListItemText primary={`${formattedDate} — ${formattedTime}`} />
+                                  <ListItemText
+                                    primary={`${formattedDate} — ${formattedTime}`}
+                                  />
                                 </ListItem>
                               );
                             })}
@@ -214,17 +243,33 @@ const ProjectList = ({ projects, setProjects }) => {
                         <ListItem disablePadding sx={{ pl: 2 }}>
                           <ListItemButton
                             onClick={() =>
-                              setSessionsVisible(sessionsVisible === `${index}-chords` ? null : `${index}-chords`)
+                              setSessionsVisible(
+                                sessionsVisible === `${index}-chords`
+                                  ? null
+                                  : `${index}-chords`
+                              )
                             }
                             sx={{ pl: 0 }}
                           >
                             <ListItemText primary="Chords / Lyrics" />
-                            {sessionsVisible === `${index}-chords` ? <ExpandLess /> : <ExpandMore />}
+                            {sessionsVisible === `${index}-chords` ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )}
                           </ListItemButton>
                         </ListItem>
-                        <Collapse in={sessionsVisible === `${index}-chords`} timeout="auto" unmountOnExit>
+                        <Collapse
+                          in={sessionsVisible === `${index}-chords`}
+                          timeout="auto"
+                          unmountOnExit
+                        >
                           <Box sx={{ pl: 4, pb: 1 }}>
-                            <Link href={project.chordsUrl} target="_blank" rel="noopener">
+                            <Link
+                              href={project.chordsUrl}
+                              target="_blank"
+                              rel="noopener"
+                            >
                               {project.chordsUrl}
                             </Link>
                           </Box>
@@ -237,17 +282,31 @@ const ProjectList = ({ projects, setProjects }) => {
                         <ListItem disablePadding sx={{ pl: 2 }}>
                           <ListItemButton
                             onClick={() =>
-                              setSessionsVisible(sessionsVisible === `${index}-notes` ? null : `${index}-notes`)
+                              setSessionsVisible(
+                                sessionsVisible === `${index}-notes`
+                                  ? null
+                                  : `${index}-notes`
+                              )
                             }
                             sx={{ pl: 0 }}
                           >
                             <ListItemText primary="Notes" />
-                            {sessionsVisible === `${index}-notes` ? <ExpandLess /> : <ExpandMore />}
+                            {sessionsVisible === `${index}-notes` ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )}
                           </ListItemButton>
                         </ListItem>
-                        <Collapse in={sessionsVisible === `${index}-notes`} timeout="auto" unmountOnExit>
+                        <Collapse
+                          in={sessionsVisible === `${index}-notes`}
+                          timeout="auto"
+                          unmountOnExit
+                        >
                           <Box sx={{ pl: 4, pb: 1 }}>
-                            <Typography variant="body2">{project.notes}</Typography>
+                            <Typography variant="body2">
+                              {project.notes}
+                            </Typography>
                           </Box>
                         </Collapse>
                       </>
@@ -258,27 +317,50 @@ const ProjectList = ({ projects, setProjects }) => {
                         <ListItem disablePadding sx={{ pl: 2 }}>
                           <ListItemButton
                             onClick={() =>
-                              setSessionsVisible(sessionsVisible === `${index}-tags` ? null : `${index}-tags`)
+                              setSessionsVisible(
+                                sessionsVisible === `${index}-tags`
+                                  ? null
+                                  : `${index}-tags`
+                              )
                             }
                             sx={{ pl: 0 }}
                           >
                             <ListItemText primary="Tags" />
-                            {sessionsVisible === `${index}-tags` ? <ExpandLess /> : <ExpandMore />}
+                            {sessionsVisible === `${index}-tags` ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )}
                           </ListItemButton>
                         </ListItem>
-                        <Collapse in={sessionsVisible === `${index}-tags`} timeout="auto" unmountOnExit>
+                        <Collapse
+                          in={sessionsVisible === `${index}-tags`}
+                          timeout="auto"
+                          unmountOnExit
+                        >
                           <Box sx={{ pl: 4, pb: 1 }}>
-                            <Typography variant="body2">{project.tags.join(', ')}</Typography>
+                            <Typography variant="body2">
+                              {project.tags.join(', ')}
+                            </Typography>
                           </Box>
                         </Collapse>
                       </>
                     )}
 
                     <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                      <Button variant="outlined" onClick={() => handleEdit(index)} size="small">
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleEdit(index)}
+                        size="small"
+                      >
                         Edit
                       </Button>
-                      <Button variant="outlined" color="error" onClick={() => handleDelete(index)} size="small">
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDelete(index)}
+                        size="small"
+                      >
                         Delete
                       </Button>
                     </Box>
