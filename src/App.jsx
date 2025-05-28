@@ -13,14 +13,35 @@ import { CssBaseline, Typography, Box, Paper } from '@mui/material';
 
 const LOCAL_STORAGE_KEY = 'projects';
 
+// Mock project data
+const mockProjects = () => {
+  const p1 = new Project('Finger Exercises', '', ['warm-up'], 'Basic warmups');
+  p1.addPracticeSession(new PracticeSession('Finger Exercises', [], 60000));
+  p1.addPracticeSession(new PracticeSession('Finger Exercises', [], 120000));
+
+  const p2 = new Project('Jazz Standards', '', ['jazz'], 'Working on phrasing');
+  p2.addPracticeSession(new PracticeSession('Jazz Standards', [], 90000));
+
+  const p3 = new Project('Original Song', '', ['composition'], 'Wrote chorus!');
+  p3.addPracticeSession(new PracticeSession('Original Song', [], 180000));
+
+  return [p1, p2, p3];
+};
+
 const App = () => {
   const [projects, setProjects] = useState([]);
 
   // Load from localStorage
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-    const loaded = stored.map(Project.fromJSON);
-    setProjects(loaded);
+
+    if (stored.length === 0) {
+      const mock = mockProjects();
+      setProjects(mock);
+    } else {
+      const loaded = stored.map(Project.fromJSON);
+      setProjects(loaded);
+    }
   }, []);
 
   // Save to localStorage
