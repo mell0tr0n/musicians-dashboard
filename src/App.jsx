@@ -36,23 +36,25 @@ const App = () => {
     const session = new PracticeSession(title, [], duration);
 
     setProjects((prevProjects) => {
-      const updated = [...prevProjects];
-      const existing = updated.find(
+      const updated = prevProjects.map((project) => {
+        if (project.title.toLowerCase() === title.toLowerCase()) {
+          // Return a new project object with updated practiceSessions
+          const newProject = Project.fromJSON(project.toJSON()); // clone safely
+          newProject.addPracticeSession(session);
+          return newProject;
+        }
+        return project;
+      });
+
+      const found = updated.find(
         (p) => p.title.toLowerCase() === title.toLowerCase()
       );
 
-      if (existing) {
-        existing.addPracticeSession(session);
-      } else {
+      if (!found) {
         const newProject = new Project(title);
         newProject.addPracticeSession(session);
-        updated.unshift(newProject);
+        return [newProject, ...updated];
       }
-
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY,
-        JSON.stringify(updated.map((p) => p.toJSON()))
-      );
 
       return updated;
     });
