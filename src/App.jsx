@@ -108,24 +108,24 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {/* Top-level background wrapper */}
       <Box
         sx={{
-          minHeight: '100vh',
-          backgroundColor: (theme) => theme.palette.background.default,
-          px: 2,
-          py: 4,
+          backgroundColor: '#7AAFB4', // Moonstone
+          borderRadius: 3,
+          padding: 3,
+          maxWidth: '800px',
+          margin: '2rem auto',
         }}
       >
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" align="center" gutterBottom>
           Musician’s Dashboard
         </Typography>
 
-        <Paper elevation={3} sx={{ p: 3, my: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
           <Timer onSave={handleSaveSession} projects={projects} />
         </Paper>
 
-        <Paper elevation={3} sx={{ px: 5, py: 1 }}>
+        <Paper elevation={3} sx={{ p: 3 }}>
           <ProjectList projects={projects} setProjects={setProjects} />
         </Paper>
       </Box>
