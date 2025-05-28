@@ -11,6 +11,7 @@ import {
   Divider,
   Collapse,
   Link,
+  Chip,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Project } from '../models/Project';
@@ -123,7 +124,7 @@ const ProjectList = ({ projects, setProjects }) => {
   };
 
   return (
-    <Box sx={{ mt: 5 }}>
+    <Box sx={{ mt: 5, px: 2 }}>
       <Box
         sx={{
           width: '100%',
@@ -217,7 +218,20 @@ const ProjectList = ({ projects, setProjects }) => {
                             sx={{ pl: 0 }}
                           >
                             <ListItemText
-                              primary={`Practice Sessions: ${project.practiceSessions.length}`}
+                              primary={
+                                <Typography
+                                  component="span"
+                                  sx={{ fontWeight: 600, fontSize: '1rem' }}
+                                >
+                                  Practice Sessions:{' '}
+                                  <Typography
+                                    component="span"
+                                    sx={{ fontWeight: 400 }}
+                                  >
+                                    {project.practiceSessions.length}
+                                  </Typography>
+                                </Typography>
+                              }
                             />
                             {sessionsVisible === `${index}-sessions` ? (
                               <ExpandLess />
@@ -254,13 +268,23 @@ const ProjectList = ({ projects, setProjects }) => {
                     {project.chordsUrl && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemText primary="Chords / Lyrics" />
+                          <ListItemText
+                            primary="Chords / Lyrics"
+                            primaryTypographyProps={{
+                              sx: { fontWeight: 600, fontSize: '1rem' },
+                            }}
+                          />
                         </ListItem>
                         <Box sx={{ pl: 4, pb: 1 }}>
                           <Link
                             href={project.chordsUrl}
                             target="_blank"
                             rel="noopener"
+                            underline="hover"
+                            sx={{
+                              wordBreak: 'break-all',
+                              color: 'primary.main',
+                            }}
                           >
                             {project.chordsUrl}
                           </Link>
@@ -271,10 +295,18 @@ const ProjectList = ({ projects, setProjects }) => {
                     {project.notes && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemText primary="Notes" />
+                          <ListItemText
+                            primary="Notes"
+                            primaryTypographyProps={{
+                              sx: { fontWeight: 600, fontSize: '1rem' },
+                            }}
+                          />
                         </ListItem>
                         <Box sx={{ pl: 4, pb: 1 }}>
-                          <Typography variant="body2">
+                          <Typography
+                            variant="body2"
+                            sx={{ whiteSpace: 'pre-line' }}
+                          >
                             {project.notes}
                           </Typography>
                         </Box>
@@ -284,12 +316,32 @@ const ProjectList = ({ projects, setProjects }) => {
                     {project.tags.length > 0 && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemText primary="Tags" />
+                          <ListItemText
+                            primary="Tags"
+                            primaryTypographyProps={{
+                              sx: { fontWeight: 600, fontSize: '1rem' },
+                            }}
+                          />
                         </ListItem>
-                        <Box sx={{ pl: 4, pb: 1 }}>
-                          <Typography variant="body2">
-                            {project.tags.join(', ')}
-                          </Typography>
+                        <Box
+                          sx={{
+                            pl: 4,
+                            pb: 1,
+                            display: 'flex',
+                            gap: 1,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          {project.tags.map((tag, i) => (
+                            <Chip
+                              key={i}
+                              label={tag}
+                              size="medium"
+                              color="secondary"
+                              variant="filled"
+                              sx={{ fontWeight: 600, fontSize: '0.9 rem' }}
+                            />
+                          ))}
                         </Box>
                       </>
                     )}

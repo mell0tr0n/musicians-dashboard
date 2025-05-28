@@ -1,23 +1,28 @@
 // src/theme/theme.js
-
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#1e88e5', // Rich blue for buttons, headings, and key actions
+      main: '#3C3253', // English Violet
     },
     secondary: {
-      main: '#ab47bc', // Soft purple for accents or secondary actions
+      main: '#61568F', // Ultra Violet
     },
     background: {
-      default: '#f7f9fb', // Light gray background
-      paper: '#ffffff', // White cards
+      default: '#A6C9C5', // Light Grayish Green
+      paper: '#ffffff',
     },
     text: {
-      primary: '#212121',
+      primary: '#292633', // Raisin Black
       secondary: '#555',
+    },
+    info: {
+      main: '#5B948D', // Dark Cyan
+    },
+    success: {
+      main: '#7AAFB4', // Moonstone
     },
   },
   typography: {
@@ -28,17 +33,11 @@ const theme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 700,
-      textAlign: 'center',
-      marginBottom: '1.5rem',
-    },
     h4: {
       fontSize: '2rem',
-      fontWeight: 600,
+      fontWeight: 700,
       textAlign: 'center',
-      marginBottom: '1.5rem',
+      marginBottom: '1rem',
     },
     h5: {
       fontSize: '1.5rem',
@@ -49,7 +48,6 @@ const theme = createTheme({
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,
-      color: '#212121',
     },
     body2: {
       fontSize: '0.95rem',
@@ -67,26 +65,14 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        html: {
-          height: '100%',
-          width: '100%',
-        },
         body: {
-          height: '100%',
-          width: '100%',
-          margin: 0,
-          padding: 0,
-          backgroundColor: '#f7f9fb',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          fontFamily: '"Inter", Roboto, "Helvetica Neue", Arial, sans-serif',
+          backgroundColor: '#f8f9fb',
         },
         '#root': {
           width: '100%',
-          maxWidth: '700px',
+          maxWidth: '760px',
+          margin: '0 auto',
           padding: '2rem',
-          boxSizing: 'border-box',
         },
       },
     },
@@ -94,7 +80,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.05)',
         },
       },
     },
@@ -102,9 +88,18 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          paddingLeft: '1.5rem',
-          paddingRight: '1.5rem',
+          paddingLeft: '1.25rem',
+          paddingRight: '1.25rem',
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
           fontWeight: 500,
+          fontSize: '0.85rem',
+          backgroundColor: '#5B948D',
+          color: '#fff',
         },
       },
     },

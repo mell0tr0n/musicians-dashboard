@@ -90,7 +90,10 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
         Practice Timer
       </Typography>
 
-      <Typography variant="h3" sx={{ my: 2 }}>
+      <Typography
+        variant="h3"
+        sx={{ my: 2, fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}
+      >
         {formatDuration(elapsed)}
       </Typography>
 

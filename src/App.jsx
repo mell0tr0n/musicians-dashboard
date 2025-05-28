@@ -85,7 +85,15 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <Box sx={{ py: 4 }}>
+      {/* Top-level background wrapper */}
+      <Box
+        sx={{
+          minHeight: '100vh',
+          backgroundColor: (theme) => theme.palette.background.default,
+          px: 2,
+          py: 4,
+        }}
+      >
         <Typography variant="h4" gutterBottom>
           Musician’s Dashboard
         </Typography>
@@ -94,14 +102,7 @@ const App = () => {
           <Timer onSave={handleSaveSession} projects={projects} />
         </Paper>
 
-        <Paper
-          elevation={3}
-          sx={{
-            px: 5,
-            py: 1,
-            my: 0,
-          }}
-        >
+        <Paper elevation={3} sx={{ px: 5, py: 1 }}>
           <ProjectList projects={projects} setProjects={setProjects} />
         </Paper>
       </Box>
