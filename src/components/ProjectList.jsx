@@ -254,109 +254,43 @@ const ProjectList = ({ projects, setProjects }) => {
                     {project.chordsUrl && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemButton
-                            onClick={() =>
-                              setSessionsVisible(
-                                sessionsVisible === `${index}-chords`
-                                  ? null
-                                  : `${index}-chords`
-                              )
-                            }
-                            sx={{ pl: 0 }}
-                          >
-                            <ListItemText primary="Chords / Lyrics" />
-                            {sessionsVisible === `${index}-chords` ? (
-                              <ExpandLess />
-                            ) : (
-                              <ExpandMore />
-                            )}
-                          </ListItemButton>
+                          <ListItemText primary="Chords / Lyrics" />
                         </ListItem>
-                        <Collapse
-                          in={sessionsVisible === `${index}-chords`}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <Box sx={{ pl: 4, pb: 1 }}>
-                            <Link
-                              href={project.chordsUrl}
-                              target="_blank"
-                              rel="noopener"
-                            >
-                              {project.chordsUrl}
-                            </Link>
-                          </Box>
-                        </Collapse>
+                        <Box sx={{ pl: 4, pb: 1 }}>
+                          <Link
+                            href={project.chordsUrl}
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            {project.chordsUrl}
+                          </Link>
+                        </Box>
                       </>
                     )}
 
                     {project.notes && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemButton
-                            onClick={() =>
-                              setSessionsVisible(
-                                sessionsVisible === `${index}-notes`
-                                  ? null
-                                  : `${index}-notes`
-                              )
-                            }
-                            sx={{ pl: 0 }}
-                          >
-                            <ListItemText primary="Notes" />
-                            {sessionsVisible === `${index}-notes` ? (
-                              <ExpandLess />
-                            ) : (
-                              <ExpandMore />
-                            )}
-                          </ListItemButton>
+                          <ListItemText primary="Notes" />
                         </ListItem>
-                        <Collapse
-                          in={sessionsVisible === `${index}-notes`}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <Box sx={{ pl: 4, pb: 1 }}>
-                            <Typography variant="body2">
-                              {project.notes}
-                            </Typography>
-                          </Box>
-                        </Collapse>
+                        <Box sx={{ pl: 4, pb: 1 }}>
+                          <Typography variant="body2">
+                            {project.notes}
+                          </Typography>
+                        </Box>
                       </>
                     )}
 
                     {project.tags.length > 0 && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemButton
-                            onClick={() =>
-                              setSessionsVisible(
-                                sessionsVisible === `${index}-tags`
-                                  ? null
-                                  : `${index}-tags`
-                              )
-                            }
-                            sx={{ pl: 0 }}
-                          >
-                            <ListItemText primary="Tags" />
-                            {sessionsVisible === `${index}-tags` ? (
-                              <ExpandLess />
-                            ) : (
-                              <ExpandMore />
-                            )}
-                          </ListItemButton>
+                          <ListItemText primary="Tags" />
                         </ListItem>
-                        <Collapse
-                          in={sessionsVisible === `${index}-tags`}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <Box sx={{ pl: 4, pb: 1 }}>
-                            <Typography variant="body2">
-                              {project.tags.join(', ')}
-                            </Typography>
-                          </Box>
-                        </Collapse>
+                        <Box sx={{ pl: 4, pb: 1 }}>
+                          <Typography variant="body2">
+                            {project.tags.join(', ')}
+                          </Typography>
+                        </Box>
                       </>
                     )}
 
