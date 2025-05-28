@@ -141,7 +141,12 @@ const ProjectList = ({ projects, setProjects }) => {
           <React.Fragment key={index}>
             <ListItem disablePadding>
               <ListItemButton onClick={() => toggleExpand(index)}>
-                <ListItemText primary={project.title} />
+                <ListItemText
+                  primary={project.title}
+                  primaryTypographyProps={{
+                    sx: { fontSize: '1.25rem', fontWeight: 600 },
+                  }}
+                />
                 {expandedIndex === index ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
             </ListItem>
@@ -381,14 +386,15 @@ const ProjectList = ({ projects, setProjects }) => {
         ))}
       </List>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setShowForm(!showForm)}
-        sx={{ mb: 2 }}
-      >
-        {showForm ? 'Cancel' : 'Add New Project'}
-      </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? 'Cancel' : 'Add New Project'}
+        </Button>
+      </Box>
 
       <Collapse in={showForm}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
