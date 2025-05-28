@@ -387,13 +387,33 @@ const ProjectList = ({ projects, setProjects }) => {
       </List>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? 'Cancel' : 'Add New Project'}
-        </Button>
+        {showForm ? (
+          <Button
+            onClick={() => setShowForm(false)}
+            sx={{
+              minWidth: 0,
+              padding: 0,
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              color: 'black',
+              lineHeight: 1,
+              '&:hover': {
+                backgroundColor: 'transparent',
+                color: 'error.main',
+              },
+            }}
+          >
+            ×
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setShowForm(true)}
+          >
+            Add New Project
+          </Button>
+        )}
       </Box>
 
       <Collapse in={showForm}>
@@ -428,9 +448,20 @@ const ProjectList = ({ projects, setProjects }) => {
             multiline
             rows={2}
           />
-          <Button variant="contained" onClick={handleAddProject}>
-            Save Project
-          </Button>
+
+          {/* Button Row */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button variant="outlined" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleAddProject}
+              color="primary"
+            >
+              Save Project
+            </Button>
+          </Box>
         </Box>
       </Collapse>
     </Box>

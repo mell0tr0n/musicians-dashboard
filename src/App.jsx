@@ -9,6 +9,7 @@ import { PracticeSession } from './models/PracticeSession';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme/theme';
 import { CssBaseline, Typography, Box, Paper } from '@mui/material';
+//import MainLayout from './layouts/MainLayout';
 
 const LOCAL_STORAGE_KEY = 'projects';
 
@@ -60,6 +61,7 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+
       <Box sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom>
           Musician’s Dashboard
