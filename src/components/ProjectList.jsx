@@ -69,6 +69,7 @@ const ProjectList = ({ projects, setProjects }) => {
 
     if (!valid) return;
 
+    // Create and add the new Project
     const newProject = new Project(
       title.trim(),
       chordsUrl.trim(),
@@ -79,8 +80,7 @@ const ProjectList = ({ projects, setProjects }) => {
       notes.trim()
     );
 
-    const updated = [newProject, ...projects];
-    setProjects(updated);
+    setProjects((prev) => [newProject, ...prev]); // Add to state
     setTitle('');
     setChordsUrl('');
     setTags('');
@@ -346,7 +346,14 @@ const ProjectList = ({ projects, setProjects }) => {
                       </>
                     )}
 
-                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 2,
+                        mt: 2,
+                      }}
+                    >
                       <Button
                         variant="outlined"
                         onClick={() => handleEdit(index)}
@@ -385,7 +392,7 @@ const ProjectList = ({ projects, setProjects }) => {
               lineHeight: 1,
               '&:hover': {
                 backgroundColor: 'transparent',
-                color: 'error.main',
+                color: 'secondary.main',
               },
             }}
           >
@@ -436,7 +443,7 @@ const ProjectList = ({ projects, setProjects }) => {
           />
 
           {/* Button Row */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
             <Button variant="outlined" onClick={() => setShowForm(false)}>
               Cancel
             </Button>

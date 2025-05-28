@@ -15,15 +15,38 @@ const LOCAL_STORAGE_KEY = 'projects';
 
 // Mock project data
 const mockProjects = () => {
-  const p1 = new Project('Finger Exercises', '', ['warm-up'], 'Basic warmups');
-  p1.addPracticeSession(new PracticeSession('Finger Exercises', [], 60000));
-  p1.addPracticeSession(new PracticeSession('Finger Exercises', [], 120000));
+  const p1 = new Project(
+    'Warrior - Yeah Yeah Yeahs',
+    'https://tabs.ultimate-guitar.com/tab/yeah-yeah-yeahs/warrior-chords-393253',
+    ['riff'],
+    'Improvement on transition into second verse'
+  );
+  p1.addPracticeSession(
+    new PracticeSession('Warrior - Yeah Yeah Yeahs', [], 60000)
+  );
+  p1.addPracticeSession(
+    new PracticeSession('Warrior - Yeah Yeah Yeahs', [], 120000)
+  );
 
-  const p2 = new Project('Jazz Standards', '', ['jazz'], 'Working on phrasing');
-  p2.addPracticeSession(new PracticeSession('Jazz Standards', [], 90000));
+  const p2 = new Project(
+    'Mouth Of A Flower - Haley Heynderickx',
+    'https://tabs.ultimate-guitar.com/tab/haley-heynderickx/mouth-of-a-flower-chords-5490891',
+    ['plucking'],
+    'Nailed down strumming and picking patterns'
+  );
+  p2.addPracticeSession(
+    new PracticeSession('Mouth Of A Flower - Haley Heynderickx', [], 90000)
+  );
 
-  const p3 = new Project('Original Song', '', ['composition'], 'Wrote chorus!');
-  p3.addPracticeSession(new PracticeSession('Original Song', [], 180000));
+  const p3 = new Project(
+    'Hush Brain - Original Song',
+    '',
+    ['composition', 'original'],
+    'Wrote chorus!'
+  );
+  p3.addPracticeSession(
+    new PracticeSession('Hush Brain - Original Song', [], 180000)
+  );
 
   return [p1, p2, p3];
 };
