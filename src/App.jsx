@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Typography, Divider, Button } from '@mui/material';
+import { Box, Typography, Divider, Button, IconButton } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { Project } from './models/Project';
 import sampleProjects from './mock/sampleProjects';
 import ProjectList from './components/ProjectList';
@@ -11,6 +12,8 @@ const App = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [hoveringSidebar, setHoveringSidebar] = useState(false);
 
   const handleAddProject = (data) => {
     const newProject = new Project(
@@ -43,39 +46,90 @@ const App = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Left Panel */}
+      {/* Left Sidebar */}
       <Box
-        sx={{ width: '30%', borderRight: '1px solid #ddd', overflowY: 'auto' }}
+        onMouseEnter={() => setHoveringSidebar(true)}
+        onMouseLeave={() => setHoveringSidebar(false)}
+        sx={{
+          width: sidebarOpen ? '30%' : '0',
+          minWidth: sidebarOpen ? '240px' : '0',
+          maxWidth: sidebarOpen ? '300px' : '0',
+          transition: 'width 0.3s ease',
+          overflowX: 'hidden',
+          borderRight: sidebarOpen ? '1px solid #ddd' : 'none',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#fff',
+        }}
       >
-        <ProjectList
-          projects={projects}
-          onSelect={(project, index) => {
-            setSelectedProject(project);
-            setSelectedIndex(index);
-            setIsAdding(false);
-          }}
-          selectedIndex={selectedIndex}
-        />
-
-        <Divider />
-
-        <Box sx={{ p: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={() => {
-              setIsAdding(true);
-              setSelectedProject(null);
-              setSelectedIndex(null);
+        {/* Collapse Button (Top-Right) */}
+        {sidebarOpen && hoveringSidebar && (
+          <IconButton
+            onClick={() => setSidebarOpen(false)}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 10,
+              backgroundColor: 'rgba(255, 255, 255, 0.85)',
+              '&:hover': { backgroundColor: 'rgba(240, 240, 240, 0.95)' },
             }}
           >
-            Add New Project
-          </Button>
-        </Box>
+            <ChevronLeft />
+          </IconButton>
+        )}
+
+        {sidebarOpen && (
+          <>
+            <ProjectList
+              projects={projects}
+              onSelect={(project, index) => {
+                setSelectedProject(project);
+                setSelectedIndex(index);
+                setIsAdding(false);
+              }}
+              selectedIndex={selectedIndex}
+            />
+            <Divider />
+            <Box sx={{ p: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => {
+                  setIsAdding(true);
+                  setSelectedProject(null);
+                  setSelectedIndex(null);
+                }}
+              >
+                Add New Project
+              </Button>
+            </Box>
+          </>
+        )}
       </Box>
 
-      {/* Right Panel */}
+      {/* Optional Expand Button when sidebar is closed */}
+      {!sidebarOpen && (
+        <Box
+          sx={{
+            width: '32px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            pt: 2,
+            backgroundColor: '#f9f9f9',
+            borderRight: '1px solid #ddd',
+          }}
+        >
+          <IconButton onClick={() => setSidebarOpen(true)}>
+            <ChevronRight />
+          </IconButton>
+        </Box>
+      )}
+
+      {/* Right Content Area */}
       <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
         {isAdding ? (
           <ProjectForm
