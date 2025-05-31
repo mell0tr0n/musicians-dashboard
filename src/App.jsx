@@ -22,7 +22,8 @@ const App = () => {
       data.title,
       data.chordsUrl,
       data.tags,
-      data.notes
+      data.notes,
+      data.artist
     );
     const updated = [newProject, ...projects];
     setProjects(updated);

@@ -1,5 +1,3 @@
-// src/components/ProjectList.jsx
-
 import React from 'react';
 import {
   Box,
@@ -26,10 +24,45 @@ const ProjectList = ({ projects, onSelect, selectedIndex }) => {
                 onClick={() => onSelect(project, index)}
               >
                 <ListItemText
-                  primary={project.title}
-                  primaryTypographyProps={{
-                    sx: { fontWeight: 600, fontSize: '1rem' },
-                  }}
+                  primary={
+                    <Box component="span">
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '1rem',
+                          color: '#4B1248', // Matches Start button
+                        }}
+                      >
+                        {project.title}
+                      </Typography>
+                      {project.artist && (
+                        <>
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontWeight: 400,
+                              fontSize: '1rem',
+                              color: 'text.primary',
+                              ml: 0.5,
+                            }}
+                          >
+                            {' by '}
+                          </Typography>
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: '1rem',
+                              color: 'text.primary',
+                            }}
+                          >
+                            {project.artist}
+                          </Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
                 />
               </ListItemButton>
             </ListItem>
