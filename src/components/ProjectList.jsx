@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  TextField,
-  Button,
   List,
   ListItem,
   ListItemText,
@@ -12,105 +10,17 @@ import {
   Collapse,
   Link,
   Chip,
+  Button,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { Project } from '../models/Project';
-import { formatDuration } from '../utils/formatDuration';
+import ProjectForm from './ProjectForm';
 
 const ProjectList = ({ projects, setProjects }) => {
   const [showForm, setShowForm] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [sessionsVisible, setSessionsVisible] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
-
-  const [title, setTitle] = useState('');
-  const [chordsUrl, setChordsUrl] = useState('');
-  const [tags, setTags] = useState('');
-  const [notes, setNotes] = useState('');
-
-  const [editTitle, setEditTitle] = useState('');
-  const [editUrl, setEditUrl] = useState('');
-  const [editTags, setEditTags] = useState('');
-  const [editNotes, setEditNotes] = useState('');
-
-  const [titleError, setTitleError] = useState('');
-  const [urlError, setUrlError] = useState('');
-
-  const isValidHttpUrl = (string) => {
-    try {
-      const url = new URL(string);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const handleAddProject = () => {
-    let valid = true;
-
-    if (!title.trim()) {
-      setTitleError('Title is required.');
-      valid = false;
-    } else if (
-      projects.some((p) => p.title.toLowerCase() === title.trim().toLowerCase())
-    ) {
-      setTitleError('A project with this title already exists.');
-      valid = false;
-    } else {
-      setTitleError('');
-    }
-
-    if (chordsUrl.trim() && !isValidHttpUrl(chordsUrl.trim())) {
-      setUrlError('Please enter a valid URL.');
-      valid = false;
-    } else {
-      setUrlError('');
-    }
-
-    if (!valid) return;
-
-    // Create and add the new Project
-    const newProject = new Project(
-      title.trim(),
-      chordsUrl.trim(),
-      tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-      notes.trim()
-    );
-
-    setProjects((prev) => [newProject, ...prev]); // Add to state
-    setTitle('');
-    setChordsUrl('');
-    setTags('');
-    setNotes('');
-    setShowForm(false);
-  };
-
-  const handleEdit = (index) => {
-    const project = projects[index];
-    setEditTitle(project.title);
-    setEditUrl(project.chordsUrl);
-    setEditTags(project.tags.join(', '));
-    setEditNotes(project.notes);
-    setEditIndex(index);
-  };
-
-  const handleSaveEdit = (index) => {
-    const updated = [...projects];
-    updated[index].update({
-      title: editTitle.trim(),
-      chordsUrl: editUrl.trim(),
-      tags: editTags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-      notes: editNotes.trim(),
-    });
-    setProjects(updated);
-    setEditIndex(null);
-  };
 
   const handleDelete = (index) => {
     if (!window.confirm('Delete this project?')) return;
@@ -125,13 +35,7 @@ const ProjectList = ({ projects, setProjects }) => {
 
   return (
     <Box sx={{ mt: 5, px: 2 }}>
-      <Box
-        sx={{
-          width: '100%',
-          textAlign: 'center',
-          marginBottom: 3,
-        }}
-      >
+      <Box sx={{ width: '100%', textAlign: 'center', marginBottom: 3 }}>
         <Typography variant="h5" component="h2">
           Your Projects
         </Typography>
@@ -155,53 +59,17 @@ const ProjectList = ({ projects, setProjects }) => {
             <Collapse in={expandedIndex === index} timeout="auto" unmountOnExit>
               <Box sx={{ px: 2, pb: 2 }}>
                 {editIndex === index ? (
-                  <>
-                    <TextField
-                      label="Title"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      fullWidth
-                      sx={{ mb: 1 }}
-                    />
-                    <TextField
-                      label="Chords/Lyrics URL"
-                      value={editUrl}
-                      onChange={(e) => setEditUrl(e.target.value)}
-                      fullWidth
-                      sx={{ mb: 1 }}
-                    />
-                    <TextField
-                      label="Tags (comma separated)"
-                      value={editTags}
-                      onChange={(e) => setEditTags(e.target.value)}
-                      fullWidth
-                      sx={{ mb: 1 }}
-                    />
-                    <TextField
-                      label="Notes"
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      fullWidth
-                      multiline
-                      rows={2}
-                      sx={{ mb: 1 }}
-                    />
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        onClick={() => handleSaveEdit(index)}
-                        color="primary"
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        onClick={() => setEditIndex(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </Box>
-                  </>
+                  <ProjectForm
+                    mode="edit"
+                    initialData={project}
+                    onSave={(data) => {
+                      const updated = [...projects];
+                      updated[index].update(data);
+                      setProjects(updated);
+                      setEditIndex(null);
+                    }}
+                    onCancel={() => setEditIndex(null)}
+                  />
                 ) : (
                   <>
                     {project.practiceSessions.length > 0 && (
@@ -292,27 +160,6 @@ const ProjectList = ({ projects, setProjects }) => {
                       </>
                     )}
 
-                    {project.notes && (
-                      <>
-                        <ListItem disablePadding sx={{ pl: 2 }}>
-                          <ListItemText
-                            primary="Notes"
-                            primaryTypographyProps={{
-                              sx: { fontWeight: 600, fontSize: '1rem' },
-                            }}
-                          />
-                        </ListItem>
-                        <Box sx={{ pl: 4, pb: 1 }}>
-                          <Typography
-                            variant="body2"
-                            sx={{ whiteSpace: 'pre-line' }}
-                          >
-                            {project.notes}
-                          </Typography>
-                        </Box>
-                      </>
-                    )}
-
                     {project.tags.length > 0 && (
                       <>
                         <ListItem disablePadding sx={{ pl: 2 }}>
@@ -346,6 +193,27 @@ const ProjectList = ({ projects, setProjects }) => {
                       </>
                     )}
 
+                    {project.notes && (
+                      <>
+                        <ListItem disablePadding sx={{ pl: 2 }}>
+                          <ListItemText
+                            primary="Notes"
+                            primaryTypographyProps={{
+                              sx: { fontWeight: 600, fontSize: '1rem' },
+                            }}
+                          />
+                        </ListItem>
+                        <Box sx={{ pl: 4, pb: 1 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ whiteSpace: 'pre-line' }}
+                          >
+                            {project.notes}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+
                     <Box
                       sx={{
                         display: 'flex',
@@ -356,7 +224,7 @@ const ProjectList = ({ projects, setProjects }) => {
                     >
                       <Button
                         variant="outlined"
-                        onClick={() => handleEdit(index)}
+                        onClick={() => setEditIndex(index)}
                         size="small"
                       >
                         Edit
@@ -410,52 +278,20 @@ const ProjectList = ({ projects, setProjects }) => {
       </Box>
 
       <Collapse in={showForm}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            error={!!titleError}
-            helperText={titleError}
-            fullWidth
-          />
-          <TextField
-            label="Chords/Lyrics URL"
-            value={chordsUrl}
-            onChange={(e) => setChordsUrl(e.target.value)}
-            error={!!urlError}
-            helperText={urlError}
-            fullWidth
-          />
-          <TextField
-            label="Tags (comma separated)"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            fullWidth
-            multiline
-            rows={2}
-          />
-
-          {/* Button Row */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-            <Button variant="outlined" onClick={() => setShowForm(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleAddProject}
-              color="primary"
-            >
-              Save Project
-            </Button>
-          </Box>
-        </Box>
+        <ProjectForm
+          mode="add"
+          onSave={(data) => {
+            const newProject = new Project(
+              data.title,
+              data.chordsUrl,
+              data.tags,
+              data.notes
+            );
+            setProjects([newProject, ...projects]);
+            setShowForm(false);
+          }}
+          onCancel={() => setShowForm(false)}
+        />
       </Collapse>
     </Box>
   );
