@@ -1,135 +1,102 @@
-// src/App.jsx
-
-import React, { useState, useEffect } from 'react';
-import Timer from './components/Timer';
-import ProjectList from './components/ProjectList';
+import React, { useState } from 'react';
+import { Box, Typography, Divider, Button } from '@mui/material';
 import { Project } from './models/Project';
-import { PracticeSession } from './models/PracticeSession';
-
-import { ThemeProvider } from '@mui/material/styles';
-import theme from './theme/theme';
-import { CssBaseline, Typography, Box, Paper } from '@mui/material';
-//import MainLayout from './layouts/MainLayout';
-
-const LOCAL_STORAGE_KEY = 'projects';
-
-// Mock project data
-const mockProjects = () => {
-  const p1 = new Project(
-    'Warrior - Yeah Yeah Yeahs',
-    'https://tabs.ultimate-guitar.com/tab/yeah-yeah-yeahs/warrior-chords-393253',
-    ['riff'],
-    'Improvement on transition into second verse'
-  );
-  p1.addPracticeSession(
-    new PracticeSession('Warrior - Yeah Yeah Yeahs', [], 60000)
-  );
-  p1.addPracticeSession(
-    new PracticeSession('Warrior - Yeah Yeah Yeahs', [], 120000)
-  );
-
-  const p2 = new Project(
-    'Mouth Of A Flower - Haley Heynderickx',
-    'https://tabs.ultimate-guitar.com/tab/haley-heynderickx/mouth-of-a-flower-chords-5490891',
-    ['plucking'],
-    'Nailed down strumming and picking patterns'
-  );
-  p2.addPracticeSession(
-    new PracticeSession('Mouth Of A Flower - Haley Heynderickx', [], 90000)
-  );
-
-  const p3 = new Project(
-    'Hush Brain - Original Song',
-    '',
-    ['composition', 'original'],
-    'Wrote chorus!'
-  );
-  p3.addPracticeSession(
-    new PracticeSession('Hush Brain - Original Song', [], 180000)
-  );
-
-  return [p1, p2, p3];
-};
+import sampleProjects from './mock/sampleProjects';
+import ProjectList from './components/ProjectList';
+import ProjectDetail from './components/ProjectDetail';
+import ProjectForm from './components/ProjectForm';
 
 const App = () => {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(sampleProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
 
-  // Load from localStorage
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-
-    if (stored.length === 0) {
-      const mock = mockProjects();
-      setProjects(mock);
-    } else {
-      const loaded = stored.map(Project.fromJSON);
-      setProjects(loaded);
-    }
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem(
-      LOCAL_STORAGE_KEY,
-      JSON.stringify(projects.map((p) => p.toJSON()))
+  const handleAddProject = (data) => {
+    const newProject = new Project(
+      data.title,
+      data.chordsUrl,
+      data.tags,
+      data.notes
     );
-  }, [projects]);
+    const updated = [newProject, ...projects];
+    setProjects(updated);
+    setSelectedProject(newProject);
+    setSelectedIndex(0);
+    setIsAdding(false);
+  };
 
-  // When a practice session is saved from the timer
-  const handleSaveSession = ({ title, duration }) => {
-    const session = new PracticeSession(title, [], duration);
+  const handleUpdateProject = (index, updatedData) => {
+    const updatedProjects = [...projects];
+    updatedProjects[index].update(updatedData);
+    setProjects(updatedProjects);
+    setSelectedProject(updatedProjects[index]);
+  };
 
-    setProjects((prevProjects) => {
-      const updated = prevProjects.map((project) => {
-        if (project.title.toLowerCase() === title.toLowerCase()) {
-          // Return a new project object with updated practiceSessions
-          const newProject = Project.fromJSON(project.toJSON()); // clone safely
-          newProject.addPracticeSession(session);
-          return newProject;
-        }
-        return project;
-      });
-
-      const found = updated.find(
-        (p) => p.title.toLowerCase() === title.toLowerCase()
-      );
-
-      if (!found) {
-        const newProject = new Project(title);
-        newProject.addPracticeSession(session);
-        return [newProject, ...updated];
-      }
-
-      return updated;
-    });
+  const handleDeleteProject = (index) => {
+    if (!window.confirm('Delete this project?')) return;
+    const updated = projects.filter((_, i) => i !== index);
+    setProjects(updated);
+    setSelectedProject(null);
+    setSelectedIndex(null);
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-
+    <Box sx={{ display: 'flex', height: '100vh' }}>
+      {/* Left Panel */}
       <Box
-        sx={{
-          backgroundColor: '#7AAFB4', // Moonstone
-          borderRadius: 3,
-          padding: 3,
-          maxWidth: '800px',
-          margin: '2rem auto',
-        }}
+        sx={{ width: '30%', borderRight: '1px solid #ddd', overflowY: 'auto' }}
       >
-        <Typography variant="h4" align="center" gutterBottom>
-          Musician’s Dashboard
-        </Typography>
+        <ProjectList
+          projects={projects}
+          onSelect={(project, index) => {
+            setSelectedProject(project);
+            setSelectedIndex(index);
+            setIsAdding(false);
+          }}
+          selectedIndex={selectedIndex}
+        />
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Timer onSave={handleSaveSession} projects={projects} />
-        </Paper>
+        <Divider />
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <ProjectList projects={projects} setProjects={setProjects} />
-        </Paper>
+        <Box sx={{ p: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={() => {
+              setIsAdding(true);
+              setSelectedProject(null);
+              setSelectedIndex(null);
+            }}
+          >
+            Add New Project
+          </Button>
+        </Box>
       </Box>
-    </ThemeProvider>
+
+      {/* Right Panel */}
+      <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+        {isAdding ? (
+          <ProjectForm
+            mode="add"
+            onSave={handleAddProject}
+            onCancel={() => setIsAdding(false)}
+          />
+        ) : selectedProject ? (
+          <ProjectDetail
+            project={selectedProject}
+            index={selectedIndex}
+            onUpdate={handleUpdateProject}
+            onDelete={handleDeleteProject}
+          />
+        ) : (
+          <Typography variant="h6" sx={{ textAlign: 'center', mt: 4 }}>
+            Select a project to view details.
+          </Typography>
+        )}
+      </Box>
+    </Box>
   );
 };
 
