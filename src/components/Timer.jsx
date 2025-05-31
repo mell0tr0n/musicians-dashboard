@@ -1,100 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-} from '@mui/material';
-import { formatDuration } from '../utils/formatDuration';
+import { Box, Button, Typography } from '@mui/material';
 
-const Timer = ({ onStop, onSave, projects = [] }) => {
+const Timer = ({ onSave, projects = [] }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [newProject, setNewProject] = useState('');
 
   useEffect(() => {
     return () => clearInterval(intervalId);
   }, [intervalId]);
 
-  const start = () => {
+  const handleStart = () => {
     if (!isRunning) {
-      const startTime = Date.now() - elapsed;
       const id = setInterval(() => {
-        setElapsed(Date.now() - startTime);
+        setElapsed((prev) => prev + 1000);
       }, 1000);
       setIntervalId(id);
       setIsRunning(true);
     }
   };
 
-  const stop = () => {
-    if (isRunning) {
-      clearInterval(intervalId);
-      setIsRunning(false);
-      if (onStop) onStop(elapsed);
-    }
+  const handleStop = () => {
+    clearInterval(intervalId);
+    setIsRunning(false);
   };
 
-  const reset = () => {
+  const handleReset = () => {
     clearInterval(intervalId);
     setIsRunning(false);
     setElapsed(0);
   };
 
-  const handleSaveClick = () => {
-    if (elapsed > 0) {
-      setDialogOpen(true);
-      setSelectedProject('');
-      setNewProject('');
-    } else {
-      alert('You must run the timer before saving.');
+  const handleSave = () => {
+    if (onSave) {
+      onSave(elapsed);
     }
+    handleReset();
   };
 
-  const handleConfirmSave = () => {
-    const title =
-      selectedProject === '__new__' ? newProject.trim() : selectedProject;
-
-    if (!title) {
-      alert('Please enter or select a project name.');
-      return;
-    }
-
-    onSave({ title, duration: elapsed });
-    setDialogOpen(false);
-    setSelectedProject('');
-    setNewProject('');
-    reset(); // optionally reset the timer after save
+  const formatTime = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
+      2,
+      '0'
+    );
+    const secs = String(totalSeconds % 60).padStart(2, '0');
+    return `${hrs}:${mins}:${secs}`;
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        textAlign: 'center',
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <Typography variant="h5" gutterBottom>
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
         Practice Timer
       </Typography>
 
       <Typography
         variant="h3"
-        sx={{ my: 2, fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}
+        sx={{
+          fontWeight: 'bold',
+          mb: 3,
+          fontFamily: 'monospace',
+          color: 'text.primary',
+        }}
       >
-        {formatDuration(elapsed)}
+        {formatTime(elapsed)}
       </Typography>
 
       <Box
@@ -105,66 +75,57 @@ const Timer = ({ onStop, onSave, projects = [] }) => {
           flexWrap: 'wrap',
         }}
       >
-        <Button variant="contained" onClick={start} disabled={isRunning}>
+        <Button
+          variant="contained"
+          onClick={handleStart}
+          disabled={isRunning}
+          sx={{
+            backgroundColor: '#4B1248',
+            '&:hover': { backgroundColor: '#3b0f3a' },
+          }}
+        >
           Start
         </Button>
-        <Button variant="contained" onClick={stop} disabled={!isRunning}>
+
+        <Button
+          variant="contained"
+          onClick={handleStop}
+          disabled={!isRunning}
+          sx={{
+            backgroundColor: '#e0e0e0',
+            color: '#666',
+            '&:hover': { backgroundColor: '#d5d5d5' },
+          }}
+        >
           Stop
         </Button>
-        <Button variant="outlined" onClick={reset}>
+
+        <Button
+          variant="outlined"
+          onClick={handleReset}
+          sx={{
+            color: '#4B1248',
+            borderColor: '#4B1248',
+            '&:hover': {
+              borderColor: '#3b0f3a',
+              backgroundColor: '#f5f0f7',
+            },
+          }}
+        >
           Reset
         </Button>
-        <Button variant="contained" color="success" onClick={handleSaveClick}>
+
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          sx={{
+            backgroundColor: '#4EB5AD',
+            '&:hover': { backgroundColor: '#3da39a' },
+          }}
+        >
           Save
         </Button>
       </Box>
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>Save Practice Session</DialogTitle>
-        <DialogContent>
-          <TextField
-            select
-            label="Select Project"
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          >
-            <MenuItem value="__new__">Create New Project</MenuItem>
-            {projects.map((proj, i) => (
-              <MenuItem key={i} value={proj.title}>
-                {proj.title}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {selectedProject && (
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Practice Session: {new Date().toLocaleDateString()} –{' '}
-              {formatDuration(elapsed)}
-            </Typography>
-          )}
-
-          {selectedProject === '__new__' && (
-            <TextField
-              label="New Project Title"
-              value={newProject}
-              onChange={(e) => setNewProject(e.target.value)}
-              fullWidth
-            />
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleConfirmSave}
-            variant="contained"
-            color="primary"
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

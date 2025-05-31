@@ -6,6 +6,7 @@ import sampleProjects from './mock/sampleProjects';
 import ProjectList from './components/ProjectList';
 import ProjectDetail from './components/ProjectDetail';
 import ProjectForm from './components/ProjectForm';
+import TimerPanel from './components/TimerPanel';
 
 const App = () => {
   const [projects, setProjects] = useState(sampleProjects);
@@ -14,6 +15,7 @@ const App = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hoveringSidebar, setHoveringSidebar] = useState(false);
+  const [showTimer, setShowTimer] = useState(true); // ⬅ Timer visibility toggle state
 
   const handleAddProject = (data) => {
     const newProject = new Project(
@@ -63,7 +65,7 @@ const App = () => {
           backgroundColor: '#fff',
         }}
       >
-        {/* Collapse Button (Top-Right) */}
+        {/* Collapse Button */}
         {sidebarOpen && hoveringSidebar && (
           <IconButton
             onClick={() => setSidebarOpen(false)}
@@ -92,7 +94,15 @@ const App = () => {
               selectedIndex={selectedIndex}
             />
             <Divider />
-            <Box sx={{ p: 2 }}>
+            <Box
+              sx={{
+                p: 2,
+                pt: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+              }}
+            >
               <Button
                 variant="contained"
                 color="primary"
@@ -105,12 +115,20 @@ const App = () => {
               >
                 Add New Project
               </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={() => setShowTimer((prev) => !prev)}
+              >
+                {showTimer ? 'Hide Timer' : 'Show Timer'}
+              </Button>
             </Box>
           </>
         )}
       </Box>
 
-      {/* Optional Expand Button when sidebar is closed */}
+      {/* Expand button when sidebar is closed */}
       {!sidebarOpen && (
         <Box
           sx={{
@@ -131,6 +149,8 @@ const App = () => {
 
       {/* Right Content Area */}
       <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+        {showTimer && <TimerPanel />}
+
         {isAdding ? (
           <ProjectForm
             mode="add"
