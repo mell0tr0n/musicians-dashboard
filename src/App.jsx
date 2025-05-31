@@ -58,7 +58,7 @@ const App = () => {
           minWidth: sidebarOpen ? '280px' : '0',
           maxWidth: sidebarOpen ? '280px' : '0',
           transition: 'width 0.3s ease',
-          overflowX: 'hidden',
+          overflow: 'hidden',
           borderRight: sidebarOpen ? '1px solid #ddd' : 'none',
           position: 'relative',
           display: 'flex',
@@ -66,6 +66,7 @@ const App = () => {
           backgroundColor: '#fff',
         }}
       >
+        {/* Collapse Button */}
         {sidebarOpen && hoveringSidebar && (
           <IconButton
             onClick={() => setSidebarOpen(false)}
@@ -84,23 +85,18 @@ const App = () => {
 
         {sidebarOpen && (
           <>
-            <ProjectList
-              projects={projects}
-              onSelect={(project, index) => {
-                setSelectedProject(project);
-                setSelectedIndex(index);
-                setIsAdding(false);
-              }}
-              selectedIndex={selectedIndex}
-            />
-            <Divider />
+            {/* Top Buttons (Pinned) */}
             <Box
               sx={{
-                p: 2,
-                pt: 1,
+                px: 2,
+                pt: 2,
+                pb: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 1,
+                flexShrink: 0,
+                backgroundColor: '#fff',
+                zIndex: 1,
               }}
             >
               <Button
@@ -124,10 +120,31 @@ const App = () => {
                 {showTimer ? 'Hide Timer' : 'Show Timer'}
               </Button>
             </Box>
+
+            <Divider />
+
+            {/* Scrollable Project List */}
+            <Box
+              sx={{
+                overflowY: 'auto',
+                flexGrow: 1,
+              }}
+            >
+              <ProjectList
+                projects={projects}
+                onSelect={(project, index) => {
+                  setSelectedProject(project);
+                  setSelectedIndex(index);
+                  setIsAdding(false);
+                }}
+                selectedIndex={selectedIndex}
+              />
+            </Box>
           </>
         )}
       </Box>
 
+      {/* Expand Button */}
       {!sidebarOpen && (
         <Box
           sx={{
@@ -146,7 +163,7 @@ const App = () => {
         </Box>
       )}
 
-      {/* Right Content Area */}
+      {/* Right Pane */}
       <Box
         sx={{
           flexGrow: 1,
