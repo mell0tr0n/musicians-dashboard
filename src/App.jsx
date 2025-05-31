@@ -16,6 +16,7 @@ const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hoveringSidebar, setHoveringSidebar] = useState(false);
   const [showTimer, setShowTimer] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddProject = (data) => {
     const newProject = new Project(
@@ -131,13 +132,18 @@ const App = () => {
               }}
             >
               <ProjectList
-                projects={projects}
+                projects={projects.filter((p) => {
+                  const text = `${p.title} ${p.artist}`.toLowerCase();
+                  return text.includes(searchTerm.toLowerCase());
+                })}
                 onSelect={(project, index) => {
                   setSelectedProject(project);
                   setSelectedIndex(index);
                   setIsAdding(false);
                 }}
                 selectedIndex={selectedIndex}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
               />
             </Box>
           </>

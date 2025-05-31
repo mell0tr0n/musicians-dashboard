@@ -7,14 +7,32 @@ import {
   ListItemText,
   Typography,
   Divider,
+  TextField,
 } from '@mui/material';
 
-const ProjectList = ({ projects, onSelect, selectedIndex }) => {
+const ProjectList = ({
+  projects,
+  onSelect,
+  selectedIndex,
+  searchTerm,
+  setSearchTerm,
+}) => {
   return (
     <Box sx={{ px: 2, pt: 2 }}>
-      <Typography variant="h6" sx={{ textAlign: 'center', mb: 2 }}>
+      <Typography variant="h6" sx={{ textAlign: 'center', mb: 1 }}>
         Your Projects
       </Typography>
+
+      <TextField
+        variant="outlined"
+        placeholder="Search projects..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        size="small"
+        fullWidth
+        sx={{ mb: 2 }}
+      />
+
       <List>
         {projects.map((project, index) => (
           <React.Fragment key={index}>
@@ -31,7 +49,7 @@ const ProjectList = ({ projects, onSelect, selectedIndex }) => {
                         sx={{
                           fontWeight: 600,
                           fontSize: '1rem',
-                          color: '#4B1248', // Matches Start button
+                          color: '#4B1248',
                         }}
                       >
                         {project.title}
