@@ -1,7 +1,7 @@
 // src/components/TagInput.jsx
 
 import React from 'react';
-import { Box, Chip, TextField, InputBase } from '@mui/material';
+import { Box, Chip, TextField } from '@mui/material';
 
 const TagInput = ({ tags, setTags, tagInput, setTagInput, label = 'Tags' }) => {
   return (
@@ -22,7 +22,6 @@ const TagInput = ({ tags, setTags, tagInput, setTagInput, label = 'Tags' }) => {
   );
 };
 
-// 🔧 Custom InputBase that behaves like native input but renders chips
 const TagInputBase = React.forwardRef(function TagInputBase(props, ref) {
   const { tags, setTags, tagInput, setTagInput, ...other } = props;
 
@@ -44,8 +43,9 @@ const TagInputBase = React.forwardRef(function TagInputBase(props, ref) {
           key={i}
           label={tag}
           onDelete={() => setTags(tags.filter((_, j) => j !== i))}
-          color="secondary"
           size="small"
+          color="secondary"
+          sx={{ fontWeight: 600, fontSize: '0.85rem' }}
         />
       ))}
       <input
@@ -54,7 +54,10 @@ const TagInputBase = React.forwardRef(function TagInputBase(props, ref) {
         value={tagInput}
         onChange={(e) => setTagInput(e.target.value)}
         onKeyDown={(e) => {
-          if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+          if (
+            (e.key === 'Enter' || e.key === ',' || e.key === ' ') &&
+            tagInput.trim()
+          ) {
             e.preventDefault();
             const newTag = tagInput.trim();
             if (!tags.includes(newTag)) {

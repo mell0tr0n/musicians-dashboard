@@ -1,25 +1,64 @@
 // src/components/ProjectForm.jsx
 
-import React, { useState } from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
-import TagInput from './TagInput';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Box,
+  TextField,
+  Button,
+  IconButton,
+  InputAdornment,
+  Chip,
+} from '@mui/material';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 
 const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
   const [title, setTitle] = useState(initialData.title || '');
   const [chordsUrl, setChordsUrl] = useState(initialData.chordsUrl || '');
   const [notes, setNotes] = useState(initialData.notes || '');
-
-  // Add mode (chip input)
   const [tags, setTags] = useState(initialData.tags || []);
   const [tagInput, setTagInput] = useState('');
-
-  // Edit mode (plain text)
   const [editTagText, setEditTagText] = useState(
     initialData.tags ? initialData.tags.join(', ') : ''
   );
-
   const [titleError, setTitleError] = useState('');
   const [urlError, setUrlError] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn('SpeechRecognition is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setNotes((prev) => `${prev} ${transcript}`.trim());
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+    };
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  const handleMicClick = () => {
+    recognitionRef.current?.start();
+  };
 
   const isValidHttpUrl = (string) => {
     try {
@@ -95,11 +134,19 @@ const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
           onChange={(e) => setEditTagText(e.target.value)}
         />
       ) : (
-        <TagInput
-          tags={tags}
-          setTags={setTags}
-          tagInput={tagInput}
-          setTagInput={setTagInput}
+        <TextField
+          label="Tags"
+          variant="outlined"
+          fullWidth
+          InputProps={{
+            inputComponent: TagInputBase,
+            inputProps: {
+              tags,
+              setTags,
+              tagInput,
+              setTagInput,
+            },
+          }}
         />
       )}
 
@@ -110,6 +157,19 @@ const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
         fullWidth
         multiline
         rows={2}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={handleMicClick} aria-label="Start recording">
+                {isRecording ? (
+                  <MicIcon sx={{ color: '#73b8c7' }} />
+                ) : (
+                  <MicOffIcon />
+                )}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
       />
 
       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
@@ -123,5 +183,63 @@ const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
     </Box>
   );
 };
+
+// Inline component: Tag input with chips inside TextField
+const TagInputBase = React.forwardRef(function TagInputBase(props, ref) {
+  const { tags, setTags, tagInput, setTagInput, ...other } = props;
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 1,
+        minHeight: '2.5em',
+        pl: 1,
+        pt: 1,
+        pb: 0.5,
+      }}
+    >
+      {tags.map((tag, index) => (
+        <Chip
+          key={index}
+          label={tag}
+          onDelete={() => setTags(tags.filter((_, i) => i !== index))}
+          size="small"
+          color="secondary"
+        />
+      ))}
+      <input
+        {...other}
+        ref={ref}
+        value={tagInput}
+        onChange={(e) => setTagInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (
+            (e.key === 'Enter' || e.key === ',' || e.key === ' ') &&
+            tagInput.trim()
+          ) {
+            e.preventDefault();
+            const newTag = tagInput.trim();
+            if (!tags.includes(newTag)) {
+              setTags([...tags, newTag]);
+            }
+            setTagInput('');
+          }
+        }}
+        style={{
+          border: 'none',
+          outline: 'none',
+          fontSize: '1rem',
+          padding: 0,
+          margin: 0,
+          minWidth: '100px',
+          background: 'transparent',
+        }}
+      />
+    </Box>
+  );
+});
 
 export default ProjectForm;
