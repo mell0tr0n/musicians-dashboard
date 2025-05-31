@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { Box, Typography, Divider, Button, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { Project } from './models/Project';
-import sampleProjects from './mock/sampleProjects';
+import { parseCsvToProjects } from './utils/parseCsvToProjects';
 import ProjectList from './components/ProjectList';
 import ProjectDetail from './components/ProjectDetail';
 import ProjectForm from './components/ProjectForm';
 import TimerPanel from './components/TimerPanel';
 
 const App = () => {
-  const [projects, setProjects] = useState(sampleProjects);
+  const [projects, setProjects] = useState(parseCsvToProjects());
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hoveringSidebar, setHoveringSidebar] = useState(false);
-  const [showTimer, setShowTimer] = useState(true); // ⬅ Timer visibility toggle state
+  const [showTimer, setShowTimer] = useState(true);
 
   const handleAddProject = (data) => {
     const newProject = new Project(
