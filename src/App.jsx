@@ -54,9 +54,9 @@ const App = () => {
         onMouseEnter={() => setHoveringSidebar(true)}
         onMouseLeave={() => setHoveringSidebar(false)}
         sx={{
-          width: sidebarOpen ? '30%' : '0',
-          minWidth: sidebarOpen ? '240px' : '0',
-          maxWidth: sidebarOpen ? '300px' : '0',
+          width: sidebarOpen ? '280px' : '0',
+          minWidth: sidebarOpen ? '280px' : '0',
+          maxWidth: sidebarOpen ? '280px' : '0',
           transition: 'width 0.3s ease',
           overflowX: 'hidden',
           borderRight: sidebarOpen ? '1px solid #ddd' : 'none',
@@ -66,7 +66,6 @@ const App = () => {
           backgroundColor: '#fff',
         }}
       >
-        {/* Collapse Button */}
         {sidebarOpen && hoveringSidebar && (
           <IconButton
             onClick={() => setSidebarOpen(false)}
@@ -129,7 +128,6 @@ const App = () => {
         )}
       </Box>
 
-      {/* Expand button when sidebar is closed */}
       {!sidebarOpen && (
         <Box
           sx={{
@@ -149,7 +147,16 @@ const App = () => {
       )}
 
       {/* Right Content Area */}
-      <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         {showTimer && <TimerPanel />}
 
         {isAdding ? (

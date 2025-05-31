@@ -1,5 +1,3 @@
-// src/components/ProjectForm.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
@@ -14,6 +12,7 @@ import MicOffIcon from '@mui/icons-material/MicOff';
 
 const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
   const [title, setTitle] = useState(initialData.title || '');
+  const [artist, setArtist] = useState(initialData.artist || '');
   const [chordsUrl, setChordsUrl] = useState(initialData.chordsUrl || '');
   const [notes, setNotes] = useState(initialData.notes || '');
   const [tags, setTags] = useState(initialData.tags || []);
@@ -101,6 +100,7 @@ const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
       chordsUrl: chordsUrl.trim(),
       notes: notes.trim(),
       tags: parsedTags,
+      artist: artist.trim(),
     };
 
     onSave(projectData);
@@ -114,6 +114,13 @@ const ProjectForm = ({ mode = 'add', initialData = {}, onSave, onCancel }) => {
         onChange={(e) => setTitle(e.target.value)}
         error={!!titleError}
         helperText={titleError}
+        fullWidth
+      />
+
+      <TextField
+        label="Artist"
+        value={artist}
+        onChange={(e) => setArtist(e.target.value)}
         fullWidth
       />
 
