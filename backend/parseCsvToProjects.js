@@ -1,40 +1,48 @@
-const fs = require('fs');
-const path = require('path');
-const { Project } = require('./Project');
-const { PracticeSession } = require('./PracticeSession');
+// frontend/src/App.jsx
 
-// Load the CSV file from the local filesystem
-const csvFilePath = path.join(__dirname, 'imported_songs.csv');
-const csvText = fs.readFileSync(csvFilePath, 'utf-8');
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Divider } from '@mui/material';
+import ProjectList from './components/ProjectList';
+import ProjectDetail from './components/ProjectDetail';
 
-// Parses the CSV text and returns an array of Project instances
-function parseCsvToProjects() {
-  const lines = csvText.split('\n').filter((line) => line.trim() !== '');
+const App = () => {
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
 
-  const projects = [];
+  // Fetch projects from backend
+  useEffect(() => {
+    fetch('/api/projects')
+      .then((res) => res.json())
+      .then((data) => setProjects(data))
+      .catch((err) => console.error('Error fetching projects:', err));
+  }, []);
 
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  return (
+    <Box display="flex" height="100vh">
+      {/* Left Panel: Project List */}
+      <Box width="30%" p={2} borderRight="1px solid #ccc" overflow="auto">
+        <Typography variant="h6" gutterBottom>
+          Projects
+        </Typography>
+        <Divider />
+        <ProjectList
+          projects={projects}
+          onSelect={(project) => setSelectedProject(project)}
+        />
+      </Box>
 
-    const [title, chordsUrl, tagsString, notes, artist] = line.split(',');
+      {/* Right Panel: Project Detail */}
+      <Box flexGrow={1} p={2} overflow="auto">
+        {selectedProject ? (
+          <ProjectDetail project={selectedProject} />
+        ) : (
+          <Typography variant="body1">
+            Select a project to view details
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+};
 
-    const tags = tagsString
-      ? tagsString.split(';').map((tag) => tag.trim())
-      : [];
-
-    const project = new Project(
-      title?.trim() || '',
-      chordsUrl?.trim() || '',
-      tags,
-      notes?.trim() || '',
-      artist?.trim() || ''
-    );
-
-    projects.push(project);
-  }
-
-  return projects;
-}
-
-module.exports = { parseCsvToProjects };
+export default App;

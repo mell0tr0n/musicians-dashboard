@@ -16,7 +16,9 @@ app.get('/', (req, res) => {
 });
 
 // GET /projects - fetch all projects
-app.get('/projects', (req, res) => {
+app.get('/api/projects', (req, res) => {
+  //confirm running latest version of code / that the route is being hit
+  console.log('GET /api/projects called');
   db.all('SELECT * FROM projects ORDER BY createdAt DESC', (err, rows) => {
     if (err) {
       console.error('Error fetching projects:', err.message);
@@ -27,7 +29,7 @@ app.get('/projects', (req, res) => {
 });
 
 // POST /projects - add a new project
-app.post('/projects', (req, res) => {
+app.post('/api/projects', (req, res) => {
   const { title, artist, chordsUrl, tags, notes, createdAt, lastUpdated } =
     req.body;
 
@@ -46,7 +48,7 @@ app.post('/projects', (req, res) => {
 });
 
 // PUT /projects/:id - update an existing project
-app.put('/projects/:id', (req, res) => {
+app.put('/api/projects/:id', (req, res) => {
   const { id } = req.params;
   const { title, artist, chordsUrl, tags, notes, createdAt, lastUpdated } =
     req.body;
@@ -67,7 +69,7 @@ app.put('/projects/:id', (req, res) => {
 });
 
 // DELETE /projects/:id - delete a project
-app.delete('/projects/:id', (req, res) => {
+app.delete('/api/projects/:id', (req, res) => {
   const { id } = req.params;
 
   db.run(`DELETE FROM projects WHERE id = ?`, [id], function (err) {
@@ -76,6 +78,16 @@ app.delete('/projects/:id', (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
     res.json({ deleted: this.changes });
+  });
+});
+
+//temp test
+app.get('/api/debug-projects', (req, res) => {
+  db.all('SELECT * FROM projects LIMIT 5', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'DB error' });
+    }
+    res.json(rows);
   });
 });
 
