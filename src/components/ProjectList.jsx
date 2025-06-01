@@ -1,13 +1,14 @@
+// frontend/src/components/ProjectList.jsx
+
 import React from 'react';
 import {
   Box,
   List,
-  ListItem,
   ListItemButton,
   ListItemText,
+  TextField,
   Typography,
   Divider,
-  TextField,
 } from '@mui/material';
 
 const ProjectList = ({
@@ -18,75 +19,47 @@ const ProjectList = ({
   setSearchTerm,
 }) => {
   return (
-    <Box sx={{ px: 2, pt: 2 }}>
-      <Typography variant="h6" sx={{ textAlign: 'center', mb: 1 }}>
-        Your Projects
-      </Typography>
-
+    <Box sx={{ p: 2 }}>
       <TextField
-        variant="outlined"
-        placeholder="Search projects..."
+        fullWidth
+        size="small"
+        placeholder="Search Projects"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        size="small"
-        fullWidth
         sx={{ mb: 2 }}
       />
+      <Divider />
 
-      <List>
-        {projects.map((project, index) => (
-          <React.Fragment key={index}>
-            <ListItem disablePadding>
-              <ListItemButton
-                selected={selectedIndex === index}
-                onClick={() => onSelect(project, index)}
-              >
-                <ListItemText
-                  primary={
-                    <Box component="span">
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: '1rem',
-                          color: '#4B1248',
-                        }}
-                      >
-                        {project.title}
-                      </Typography>
-                      {project.artist && (
-                        <>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontWeight: 400,
-                              fontSize: '1rem',
-                              color: 'text.primary',
-                              ml: 0.5,
-                            }}
-                          >
-                            {' by '}
-                          </Typography>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontWeight: 600,
-                              fontSize: '1rem',
-                              color: 'text.primary',
-                            }}
-                          >
-                            {project.artist}
-                          </Typography>
-                        </>
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-            <Divider component="li" />
-          </React.Fragment>
-        ))}
+      <List dense>
+        {projects.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            No projects found.
+          </Typography>
+        ) : (
+          projects.map((project, index) => (
+            <ListItemButton
+              key={project.id || index}
+              selected={index === selectedIndex}
+              onClick={() => onSelect(project, index)}
+              sx={{ borderRadius: 1 }}
+            >
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    {project.title || 'Untitled'}
+                  </Typography>
+                }
+                secondary={
+                  project.artist ? (
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      by {project.artist}
+                    </Typography>
+                  ) : null
+                }
+              />
+            </ListItemButton>
+          ))
+        )}
       </List>
     </Box>
   );
