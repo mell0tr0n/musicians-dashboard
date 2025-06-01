@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Divider, Button, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { Project } from './models/Project';
-import { parseCsvToProjects } from './utils/parseCsvToProjects';
 import ProjectList from './components/ProjectList';
 import ProjectDetail from './components/ProjectDetail';
 import ProjectForm from './components/ProjectForm';
 import TimerPanel from './components/TimerPanel';
 
 const App = () => {
-  const [projects, setProjects] = useState(parseCsvToProjects());
+  const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -18,39 +16,95 @@ const App = () => {
   const [showTimer, setShowTimer] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch projects from the backend
+  useEffect(() => {
+    fetch('http://localhost:3001/api/projects')
+      .then((res) => res.json())
+      .then((data) => {
+        const normalized = data
+          .map((p) => ({
+            ...p,
+            tags: typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags,
+          }))
+          .filter((p) => p.title && p.title.trim().length > 0); // ✅ ignore blanks
+        //test projects with no title
+        console.log(
+          'Projects with missing title:',
+          data.filter((p) => !p.title || p.title.trim() === '')
+        );
+
+        setProjects(normalized);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch projects:', err);
+      });
+  }, []);
+
   const handleAddProject = (data) => {
-    const newProject = new Project(
-      data.title,
-      data.chordsUrl,
-      data.tags,
-      data.notes,
-      data.artist
-    );
-    const updated = [newProject, ...projects];
-    setProjects(updated);
-    setSelectedProject(newProject);
-    setSelectedIndex(0);
-    setIsAdding(false);
+    const now = new Date().toISOString();
+    const newProject = {
+      ...data,
+      createdAt: now,
+      lastUpdated: now,
+    };
+
+    fetch('http://localhost:3001/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProject),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        const saved = { ...newProject, id: result.id };
+        setProjects((prev) => [saved, ...prev]);
+        setSelectedProject(saved);
+        setSelectedIndex(0);
+        setIsAdding(false);
+      })
+      .catch((err) => console.error('Failed to add project:', err));
   };
 
   const handleUpdateProject = (index, updatedData) => {
-    const updatedProjects = [...projects];
-    updatedProjects[index].update(updatedData);
-    setProjects(updatedProjects);
-    setSelectedProject(updatedProjects[index]);
+    const existing = projects[index];
+    const updated = {
+      ...existing,
+      ...updatedData,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    fetch(`http://localhost:3001/api/projects/${existing.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    })
+      .then(() => {
+        const updatedProjects = [...projects];
+        updatedProjects[index] = updated;
+        setProjects(updatedProjects);
+        setSelectedProject(updated);
+      })
+      .catch((err) => console.error('Failed to update project:', err));
   };
 
   const handleDeleteProject = (index) => {
+    const project = projects[index];
     if (!window.confirm('Delete this project?')) return;
-    const updated = projects.filter((_, i) => i !== index);
-    setProjects(updated);
-    setSelectedProject(null);
-    setSelectedIndex(null);
+
+    fetch(`http://localhost:3001/api/projects/${project.id}`, {
+      method: 'DELETE',
+    })
+      .then(() => {
+        const updated = projects.filter((_, i) => i !== index);
+        setProjects(updated);
+        setSelectedProject(null);
+        setSelectedIndex(null);
+      })
+      .catch((err) => console.error('Failed to delete project:', err));
   };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Left Sidebar */}
+      {/* Sidebar */}
       <Box
         onMouseEnter={() => setHoveringSidebar(true)}
         onMouseLeave={() => setHoveringSidebar(false)}
@@ -86,7 +140,6 @@ const App = () => {
 
         {sidebarOpen && (
           <>
-            {/* Top Buttons (Pinned) */}
             <Box
               sx={{
                 px: 2,
@@ -124,13 +177,7 @@ const App = () => {
 
             <Divider />
 
-            {/* Scrollable Project List */}
-            <Box
-              sx={{
-                overflowY: 'auto',
-                flexGrow: 1,
-              }}
-            >
+            <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
               <ProjectList
                 projects={projects.filter((p) => {
                   const text = `${p.title} ${p.artist}`.toLowerCase();
@@ -150,7 +197,6 @@ const App = () => {
         )}
       </Box>
 
-      {/* Expand Button */}
       {!sidebarOpen && (
         <Box
           sx={{
@@ -169,7 +215,6 @@ const App = () => {
         </Box>
       )}
 
-      {/* Right Pane */}
       <Box
         sx={{
           flexGrow: 1,

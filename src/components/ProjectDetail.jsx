@@ -1,35 +1,30 @@
+// frontend/src/components/ProjectDetail.jsx
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
+  Stack,
   Chip,
-  Link,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  Collapse,
-  Divider,
   IconButton,
   Menu,
   MenuItem,
+  Link,
+  Divider,
 } from '@mui/material';
-import { ExpandLess, ExpandMore, MoreVert } from '@mui/icons-material';
-import ProjectForm from './ProjectForm';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
-const formatDate = (dateStr) => {
-  try {
-    return new Date(dateStr).toLocaleString();
-  } catch {
-    return dateStr;
-  }
+const formatDate = (isoString) => {
+  if (!isoString) return '—';
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return new Date(isoString).toLocaleDateString(undefined, options);
 };
 
-const ProjectDetail = ({ project, index, onUpdate, onDelete }) => {
-  const [editMode, setEditMode] = useState(false);
-  const [sessionsExpanded, setSessionsExpanded] = useState(false);
+const ProjectDetail = ({ project }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
+  const handleMenuClick = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   if (!project) return null;
 
@@ -37,217 +32,116 @@ const ProjectDetail = ({ project, index, onUpdate, onDelete }) => {
     title,
     artist,
     chordsUrl,
+    recordingUrl,
     notes,
-    tags,
-    practiceSessions,
+    tags = [],
+    capo,
+    transpose,
+    memorized,
     createdAt,
     lastUpdated,
-    ...rest
   } = project;
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleEdit = () => {
-    setEditMode(true);
-    handleMenuClose();
-  };
-
-  const handleDelete = () => {
-    if (window.confirm('Delete this project?')) {
-      onDelete(index);
-    }
-    handleMenuClose();
-  };
-
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: '640px',
-        minWidth: '640px',
-        minHeight: 'calc(100vh - 64px - 48px)',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignSelf: 'center',
-      }}
-    >
-      {/* Settings Icon */}
-      {!editMode && (
-        <>
-          <IconButton
-            aria-label="Project options"
-            onClick={handleMenuClick}
-            sx={{ position: 'absolute', top: 0, right: 0 }}
-          >
-            <MoreVert />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={menuOpen}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            <MenuItem onClick={handleEdit}>Edit</MenuItem>
-            <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-              Delete
-            </MenuItem>
-          </Menu>
-        </>
-      )}
-
-      {editMode ? (
-        <ProjectForm
-          mode="edit"
-          initialData={project}
-          onSave={(updatedData) => {
-            onUpdate(index, updatedData);
-            setEditMode(false);
-          }}
-          onCancel={() => setEditMode(false)}
-        />
-      ) : (
-        <>
-          {/* Title + Artist */}
-          <Typography variant="h4" sx={{ mb: 1 }}>
-            {title}
-            {artist && (
-              <Typography
-                component="span"
-                variant="h5"
-                sx={{ fontWeight: 400, ml: 1 }}
-              >
-                by{' '}
-                <Box component="span" sx={{ fontWeight: 600 }}>
-                  {artist}
-                </Box>
-              </Typography>
-            )}
+    <Box sx={{ width: '100%', px: 3, py: 2 }}>
+      {/* Title + Artist + Menu */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="flex-start"
+      >
+        <Box>
+          <Typography variant="h4">{title}</Typography>
+          <Typography variant="h6" color="text.secondary">
+            by {artist}
           </Typography>
+        </Box>
+        <IconButton onClick={handleMenuClick}>
+          <MoreVertIcon />
+        </IconButton>
+        <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+          <MenuItem onClick={handleMenuClose}>Edit Project</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Delete Project</MenuItem>
+        </Menu>
+      </Box>
 
-          {/* Chords / Lyrics */}
-          {chordsUrl && (
-            <Box mb={3} minHeight="4rem">
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Chords / Lyrics
-              </Typography>
-              <Link
-                href={chordsUrl}
-                target="_blank"
-                rel="noopener"
-                underline="hover"
-                sx={{
-                  fontSize: '1rem',
-                  color: 'primary.main',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {chordsUrl}
-              </Link>
-            </Box>
-          )}
+      <Divider sx={{ my: 2 }} />
 
-          {/* Practice Sessions */}
-          {practiceSessions?.length > 0 && (
-            <Box mb={3} minHeight="5rem">
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                onClick={() => setSessionsExpanded(!sessionsExpanded)}
-              >
-                Practice Sessions ({practiceSessions.length})
-                {sessionsExpanded ? <ExpandLess /> : <ExpandMore />}
-              </Typography>
-              <Collapse in={sessionsExpanded} timeout="auto" unmountOnExit>
-                <List dense>
-                  {practiceSessions.map((session, i) => {
-                    const date = new Date(
-                      session.startTime
-                    ).toLocaleDateString();
-                    const formattedTime = new Date(session.duration)
-                      .toISOString()
-                      .substr(11, 8);
-                    return (
-                      <ListItem key={i}>
-                        <ListItemText primary={`${date} — ${formattedTime}`} />
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </Collapse>
-            </Box>
-          )}
+      <Stack spacing={2}>
+        {/* Technical Info */}
+        <Box>
+          <Typography variant="subtitle1">Technical Info:</Typography>
+          <Stack direction="row" spacing={4} mt={1}>
+            <Typography>Capo: {capo !== null ? capo : '—'}</Typography>
+            <Typography>
+              Transpose:{' '}
+              {transpose !== null
+                ? transpose >= 0
+                  ? `+${transpose}`
+                  : transpose
+                : '—'}
+            </Typography>
+            <Typography>
+              Memorized:{' '}
+              {memorized === true ? 'Yes' : memorized === false ? 'No' : '—'}
+            </Typography>
+          </Stack>
+        </Box>
 
-          {/* Tags */}
-          {tags?.length > 0 && (
-            <Box mb={3} minHeight="3rem">
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Tags
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {tags.map((tag, i) => (
-                  <Chip key={i} label={tag} />
-                ))}
-              </Box>
-            </Box>
-          )}
+        {/* Links */}
+        <Box>
+          <Typography variant="subtitle1">Links:</Typography>
+          <Stack spacing={1} mt={1}>
+            <Typography>
+              Chords:{' '}
+              {chordsUrl ? (
+                <Link href={chordsUrl} target="_blank" rel="noopener">
+                  {chordsUrl}
+                </Link>
+              ) : (
+                '—'
+              )}
+            </Typography>
+            <Typography>
+              Recording:{' '}
+              {recordingUrl ? (
+                <Link href={recordingUrl} target="_blank" rel="noopener">
+                  {recordingUrl}
+                </Link>
+              ) : (
+                '—'
+              )}
+            </Typography>
+          </Stack>
+        </Box>
 
-          {/* Notes */}
-          {notes && (
-            <Box mb={3} minHeight="3rem">
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Notes
-              </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                {notes}
-              </Typography>
-            </Box>
-          )}
+        {/* Tags */}
+        <Box>
+          <Typography variant="subtitle1">Tags:</Typography>
+          <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
+            {tags.length > 0 ? (
+              tags.map((tag, idx) => <Chip key={idx} label={tag} />)
+            ) : (
+              <Typography color="text.secondary">None</Typography>
+            )}
+          </Stack>
+        </Box>
 
-          {/* Created / Updated timestamps */}
-          {createdAt && (
-            <Box mb={1}>
-              <Typography variant="body2" color="text.secondary">
-                Created: {formatDate(createdAt)}
-              </Typography>
-            </Box>
-          )}
-          {lastUpdated && (
-            <Box mb={3}>
-              <Typography variant="body2" color="text.secondary">
-                Last updated: {formatDate(lastUpdated)}
-              </Typography>
-            </Box>
-          )}
+        {/* Notes */}
+        <Box>
+          <Typography variant="subtitle1">Notes:</Typography>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mt: 1 }}>
+            {notes || '—'}
+          </Typography>
+        </Box>
+      </Stack>
 
-          {/* Any other remaining fields */}
-          {Object.entries(rest).map(([key, value]) => {
-            if (!value || Array.isArray(value)) return null;
-            return (
-              <Box key={key} mb={2}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  {key}
-                </Typography>
-                <Typography variant="body2">{String(value)}</Typography>
-              </Box>
-            );
-          })}
+      <Divider sx={{ my: 3 }} />
 
-          <Divider sx={{ mb: 3 }} />
-        </>
-      )}
+      <Typography variant="caption" color="text.secondary">
+        Created: {formatDate(createdAt)}  Last Updated:{' '}
+        {formatDate(lastUpdated)}
+      </Typography>
     </Box>
   );
 };
