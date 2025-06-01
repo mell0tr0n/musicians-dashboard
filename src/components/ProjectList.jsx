@@ -17,9 +17,12 @@ const ProjectList = ({
   selectedIndex,
   searchTerm,
   setSearchTerm,
+  onSaveToProject,
 }) => {
+  const isSaveMode = !!onSaveToProject;
+
   return (
-    <Box sx={{ p: 2 }}>
+    <Box>
       <TextField
         fullWidth
         size="small"
@@ -28,6 +31,7 @@ const ProjectList = ({
         onChange={(e) => setSearchTerm(e.target.value)}
         sx={{ mb: 2 }}
       />
+
       <Divider />
 
       <List dense>
@@ -39,22 +43,29 @@ const ProjectList = ({
           projects.map((project, index) => (
             <ListItemButton
               key={project.id || index}
-              selected={index === selectedIndex}
-              onClick={() => onSelect(project, index)}
-              sx={{ borderRadius: 1 }}
+              selected={!isSaveMode && index === selectedIndex}
+              onClick={() =>
+                isSaveMode ? onSaveToProject(project) : onSelect(project, index)
+              }
+              sx={{
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: isSaveMode ? '#dceefc' : undefined,
+                },
+              }}
             >
               <ListItemText
                 primary={
                   <Typography variant="subtitle1" fontWeight="medium">
-                    {project.title || 'Untitled'}
+                    {project.title}
                   </Typography>
                 }
                 secondary={
-                  project.artist ? (
+                  project.artist && (
                     <Typography variant="body2" color="text.secondary" noWrap>
                       by {project.artist}
                     </Typography>
-                  ) : null
+                  )
                 }
               />
             </ListItemButton>

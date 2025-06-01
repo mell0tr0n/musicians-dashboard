@@ -8,15 +8,7 @@ import {
   Paper,
   Tooltip,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  MenuItem,
 } from '@mui/material';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faClock,
@@ -25,21 +17,11 @@ import {
   faFloppyDisk,
 } from '@fortawesome/free-solid-svg-icons';
 
-const TimerToolbar = () => {
+const TimerToolbar = ({ onRequestSaveToProject }) => {
   const [displayMode, setDisplayMode] = useState('mini');
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef(null);
-
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [notes, setNotes] = useState('');
-
-  const dummyProjects = [
-    { id: 1, title: 'What’s Up' },
-    { id: 2, title: 'The Barrel' },
-    { id: 3, title: 'Rooster' },
-  ];
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -56,8 +38,7 @@ const TimerToolbar = () => {
     if (!intervalRef.current) {
       const startTime = Date.now() - elapsed;
       intervalRef.current = setInterval(() => {
-        const newElapsed = Date.now() - startTime;
-        setElapsed(newElapsed);
+        setElapsed(Date.now() - startTime);
       }, 1000);
       setIsRunning(true);
     }
@@ -75,19 +56,20 @@ const TimerToolbar = () => {
 
   const handleSave = () => {
     stopTimer();
-    setSaveDialogOpen(true);
-  };
 
-  const handleConfirmSave = () => {
-    console.log('Saved:', {
-      duration: formatTime(elapsed),
-      project: selectedProject,
-      notes,
-    });
-    setSaveDialogOpen(false);
-    setElapsed(0);
-    setNotes('');
-    setSelectedProject('');
+    const sessionData = {
+      title: 'Untitled Session',
+      tags: [],
+      duration: elapsed,
+      startTime: new Date(Date.now() - elapsed).toISOString(),
+      endTime: new Date().toISOString(),
+      label: '',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (onRequestSaveToProject) {
+      onRequestSaveToProject(sessionData);
+    }
   };
 
   return (
@@ -115,11 +97,7 @@ const TimerToolbar = () => {
               <IconButton
                 onClick={() => setDisplayMode('mini')}
                 size="small"
-                sx={{
-                  p: 0.5,
-                  '&:focus': { outline: 'none' },
-                  '&:active': { outline: 'none', boxShadow: 'none' },
-                }}
+                sx={{ p: 0.5 }}
               >
                 <FontAwesomeIcon icon={faClock} size="lg" />
               </IconButton>
@@ -143,22 +121,12 @@ const TimerToolbar = () => {
               overflowX: 'hidden',
             }}
           >
-            {/* Timer icon (click to hide) */}
             <Tooltip title="Hide Timer">
-              <IconButton
-                onClick={() => setDisplayMode('hidden')}
-                size="small"
-                sx={{
-                  p: 0.5,
-                  '&:focus': { outline: 'none' },
-                  '&:active': { outline: 'none', boxShadow: 'none' },
-                }}
-              >
+              <IconButton onClick={() => setDisplayMode('hidden')} size="small">
                 <FontAwesomeIcon icon={faClock} size="lg" />
               </IconButton>
             </Tooltip>
 
-            {/* Timer display */}
             <Box
               sx={{
                 backgroundColor: '#f1f1f1',
@@ -181,17 +149,11 @@ const TimerToolbar = () => {
               </Typography>
             </Box>
 
-            {/* Play / Pause */}
             <Tooltip title={isRunning ? 'Pause' : 'Play'}>
               <IconButton
                 onClick={toggleRunning}
                 size="small"
                 color={isRunning ? 'error' : 'primary'}
-                sx={{
-                  p: 0.5,
-                  '&:focus': { outline: 'none' },
-                  '&:active': { outline: 'none', boxShadow: 'none' },
-                }}
               >
                 <FontAwesomeIcon
                   icon={isRunning ? faPause : faPlay}
@@ -200,69 +162,14 @@ const TimerToolbar = () => {
               </IconButton>
             </Tooltip>
 
-            {/* Save */}
             <Tooltip title="Save Session">
-              <IconButton
-                onClick={handleSave}
-                size="small"
-                sx={{
-                  p: 0.5,
-                  '&:focus': { outline: 'none' },
-                  '&:active': { outline: 'none', boxShadow: 'none' },
-                }}
-              >
+              <IconButton onClick={handleSave} size="small">
                 <FontAwesomeIcon icon={faFloppyDisk} size="lg" />
               </IconButton>
             </Tooltip>
           </Box>
         </Fade>
       )}
-
-      {/* Save Session Modal */}
-      <Dialog
-        open={saveDialogOpen}
-        onClose={() => setSaveDialogOpen(false)}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>Save Practice Session</DialogTitle>
-        <DialogContent
-          sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}
-        >
-          <TextField
-            select
-            label="Select Project"
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            fullWidth
-          >
-            {dummyProjects.map((proj) => (
-              <MenuItem key={proj.id} value={proj.title}>
-                {proj.title}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            label="Notes (optional)"
-            multiline
-            minRows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            fullWidth
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleConfirmSave}
-            variant="contained"
-            color="primary"
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Paper>
   );
 };

@@ -23,6 +23,21 @@ db.serialize(() => {
       lastUpdated TEXT
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS practice_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projectId INTEGER,
+      title TEXT,
+      tags TEXT,
+      duration INTEGER,
+      startTime TEXT,
+      endTime TEXT,
+      label TEXT,
+      createdAt TEXT,
+      FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE
+    )
+  `);
 });
 
 module.exports = db;

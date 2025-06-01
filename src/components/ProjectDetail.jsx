@@ -1,6 +1,6 @@
 // frontend/src/components/ProjectDetail.jsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -11,6 +11,9 @@ import {
   Divider,
   Link,
   Stack,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
@@ -20,151 +23,149 @@ const formatDate = (isoString) => {
   return new Date(isoString).toLocaleDateString(undefined, options);
 };
 
+const formatDuration = (ms) => {
+  if (!ms) return '—';
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}m ${sec}s`;
+};
+
 const ProjectDetail = ({ project, index, onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
+  const [sessions, setSessions] = useState([]);
 
-  const handleMenuClick = (e) => setAnchorEl(e.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+  useEffect(() => {
+    if (!project?.id) return;
 
-  if (!project) return null;
-
-  const {
-    title,
-    artist,
-    chordsUrl,
-    recordingUrl,
-    notes,
-    tags = [],
-    capo,
-    transpose,
-    memorized,
-    createdAt,
-    lastUpdated,
-  } = project;
+    fetch(`http://localhost:3001/api/projects/${project.id}/sessions`)
+      .then((res) => res.json())
+      .then((data) => setSessions(data))
+      .catch((err) => console.error('Failed to fetch sessions:', err));
+  }, [project]);
 
   return (
-    <Box sx={{ width: '100%', px: 2, wordBreak: 'break-word' }}>
-      {/* Title and Menu */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="flex-start"
-      >
-        <Box>
-          <Typography variant="h4">{title}</Typography>
-          <Typography variant="h6" color="text.secondary">
-            by {artist}
-          </Typography>
-        </Box>
-        <IconButton onClick={handleMenuClick}>
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" gutterBottom>
+          {project.title}
+        </Typography>
+        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
           <MoreVertIcon />
         </IconButton>
-        <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={() => setAnchorEl(null)}
+        >
           <MenuItem
             onClick={() => {
-              handleMenuClose();
-              onEdit?.();
+              onEdit(index);
+              setAnchorEl(null);
             }}
           >
-            Edit Project
+            Edit
           </MenuItem>
           <MenuItem
             onClick={() => {
-              handleMenuClose();
-              onDelete?.(index);
+              onDelete(index);
+              setAnchorEl(null);
             }}
-            sx={{ color: 'error.main' }}
           >
-            Delete Project
+            Delete
           </MenuItem>
         </Menu>
       </Box>
 
-      <Divider sx={{ my: 2 }} />
-
-      {/* Technical Info */}
-      <Box mb={2}>
-        <Typography variant="subtitle1">Technical Info:</Typography>
-        <Stack direction="row" spacing={4} mt={1} flexWrap="wrap">
-          <Typography>Capo: {capo !== null ? capo : '—'}</Typography>
-          <Typography>
-            Transpose:{' '}
-            {transpose !== null
-              ? transpose >= 0
-                ? `+${transpose}`
-                : transpose
-              : '—'}
-          </Typography>
-          <Typography>
-            Memorized:{' '}
-            {memorized === true ? 'Yes' : memorized === false ? 'No' : '—'}
-          </Typography>
-        </Stack>
-      </Box>
-
-      {/* Links */}
-      <Box mb={2}>
-        <Typography variant="subtitle1">Links:</Typography>
-        <Stack spacing={1} mt={1}>
-          <Typography sx={{ wordBreak: 'break-word' }}>
-            Chords:{' '}
-            {chordsUrl ? (
-              <Link
-                href={chordsUrl}
-                target="_blank"
-                rel="noopener"
-                sx={{ wordBreak: 'break-word' }}
-              >
-                {chordsUrl}
-              </Link>
-            ) : (
-              '—'
-            )}
-          </Typography>
-          <Typography sx={{ wordBreak: 'break-word' }}>
-            Recording:{' '}
-            {recordingUrl ? (
-              <Link
-                href={recordingUrl}
-                target="_blank"
-                rel="noopener"
-                sx={{ wordBreak: 'break-word' }}
-              >
-                {recordingUrl}
-              </Link>
-            ) : (
-              '—'
-            )}
-          </Typography>
-        </Stack>
-      </Box>
-
-      {/* Tags */}
-      <Box mb={2}>
-        <Typography variant="subtitle1">Tags:</Typography>
-        <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
-          {tags.length > 0 ? (
-            tags.map((tag, idx) => <Chip key={idx} label={tag} />)
-          ) : (
-            <Typography color="text.secondary">None</Typography>
-          )}
-        </Stack>
-      </Box>
-
-      {/* Notes */}
-      <Box mb={3}>
-        <Typography variant="subtitle1">Notes:</Typography>
-        <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mt: 1 }}>
-          {notes || '—'}
+      {project.artist && (
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+          by {project.artist}
         </Typography>
-      </Box>
+      )}
 
-      <Divider sx={{ my: 3 }} />
-      <Typography variant="caption" color="text.secondary">
-        Created: {formatDate(createdAt)}  Last Updated:{' '}
-        {formatDate(lastUpdated)}
+      <Typography variant="body2" gutterBottom>
+        <strong>Technical Info:</strong>
+        <br />
+        Capo: {project.capo ?? '—'} &nbsp;&nbsp; Transpose:{' '}
+        {project.transpose ?? '—'} &nbsp;&nbsp; Memorized:{' '}
+        {project.memorized ? 'Yes' : '—'}
       </Typography>
+
+      <Typography variant="body2" sx={{ mb: 2 }}>
+        <strong>Links:</strong>
+        <br />
+        Chords:{' '}
+        {project.chordsUrl ? (
+          <Link
+            href={project.chordsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {project.chordsUrl}
+          </Link>
+        ) : (
+          '—'
+        )}
+        <br />
+        Recording:{' '}
+        {project.recordingUrl ? (
+          <Link
+            href={project.recordingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {project.recordingUrl}
+          </Link>
+        ) : (
+          '—'
+        )}
+      </Typography>
+
+      {project.tags?.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          <strong>Tags:</strong>
+          <br />
+          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+            {project.tags.map((tag, i) => (
+              <Chip key={i} label={tag} size="small" />
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {project.notes && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            <strong>Notes:</strong>
+            <br />
+            {project.notes}
+          </Typography>
+        </Box>
+      )}
+
+      {/* === Practice Sessions === */}
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="h6" gutterBottom>
+        Practice Sessions
+      </Typography>
+
+      {sessions.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No practice sessions recorded.
+        </Typography>
+      ) : (
+        <List dense>
+          {sessions.map((session, i) => (
+            <ListItem key={i} disablePadding>
+              <ListItemText
+                primary={formatDate(session.createdAt)}
+                secondary={formatDuration(session.duration)}
+              />
+            </ListItem>
+          ))}
+        </List>
+      )}
     </Box>
   );
 };

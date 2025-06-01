@@ -1,25 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const db = require('./db');
+const db = require('./db.js');
 
 const app = express();
 const PORT = 3001;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Root test route
-app.get('/', (req, res) => {
-  res.send('Musician’s Dashboard Backend is running.');
-});
-
-// GET /projects - fetch all projects
+// Get all projects sorted by lastUpdated DESC
 app.get('/api/projects', (req, res) => {
-  //confirm running latest version of code / that the route is being hit
-  console.log('GET /api/projects called');
-  db.all('SELECT * FROM projects ORDER BY createdAt DESC', (err, rows) => {
+  db.all('SELECT * FROM projects ORDER BY lastUpdated DESC', (err, rows) => {
     if (err) {
       console.error('Error fetching projects:', err.message);
       return res.status(500).json({ error: 'Database error' });
@@ -28,70 +20,94 @@ app.get('/api/projects', (req, res) => {
   });
 });
 
-// POST /projects - add a new project
+// Create a new project
 app.post('/api/projects', (req, res) => {
-  const { title, artist, chordsUrl, tags, notes, createdAt, lastUpdated } =
-    req.body;
+  const {
+    title,
+    artist,
+    chordsUrl,
+    tags = [],
+    notes = '',
+    capo,
+    memorized,
+    transpose,
+  } = req.body;
+  const createdAt = new Date().toISOString();
+  const lastUpdated = createdAt;
+  const tagString = JSON.stringify(tags);
 
   db.run(
-    `INSERT INTO projects (title, artist, chordsUrl, tags, notes, createdAt, lastUpdated)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [title, artist, chordsUrl, tags, notes, createdAt, lastUpdated],
+    `INSERT INTO projects (title, artist, chordsUrl, tags, notes, capo, memorized, transpose, createdAt, lastUpdated)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      title,
+      artist,
+      chordsUrl,
+      tagString,
+      notes,
+      capo,
+      memorized,
+      transpose,
+      createdAt,
+      lastUpdated,
+    ],
     function (err) {
       if (err) {
-        console.error('Error adding project:', err.message);
-        return res.status(500).json({ error: 'Database error' });
+        console.error('Error inserting project:', err.message);
+        return res.status(500).json({ error: 'Database insert failed' });
       }
       res.status(201).json({ id: this.lastID });
     }
   );
 });
 
-// PUT /projects/:id - update an existing project
-app.put('/api/projects/:id', (req, res) => {
-  const { id } = req.params;
-  const { title, artist, chordsUrl, tags, notes, createdAt, lastUpdated } =
-    req.body;
+// Save practice session to a project and update lastUpdated
+app.post('/api/projects/:id/practice-sessions', (req, res) => {
+  const projectId = req.params.id;
+  const { duration, startTime, endTime } = req.body;
+  const createdAt = new Date().toISOString();
 
   db.run(
-    `UPDATE projects SET
-      title = ?, artist = ?, chordsUrl = ?, tags = ?, notes = ?, createdAt = ?, lastUpdated = ?
-     WHERE id = ?`,
-    [title, artist, chordsUrl, tags, notes, createdAt, lastUpdated, id],
+    `INSERT INTO practice_sessions (projectId, duration, startTime, endTime, createdAt)
+     VALUES (?, ?, ?, ?, ?)`,
+    [projectId, duration, startTime, endTime, createdAt],
     function (err) {
       if (err) {
-        console.error('Error updating project:', err.message);
-        return res.status(500).json({ error: 'Database error' });
+        console.error('Error saving practice session:', err.message);
+        return res.status(500).json({ error: 'Failed to save session' });
       }
-      res.json({ updated: this.changes });
+
+      // Update the parent project's lastUpdated timestamp
+      db.run(
+        `UPDATE projects SET lastUpdated = ? WHERE id = ?`,
+        [createdAt, projectId],
+        (updateErr) => {
+          if (updateErr) {
+            console.error('Error updating lastUpdated:', updateErr.message);
+            return res
+              .status(500)
+              .json({ error: 'Failed to update timestamp' });
+          }
+
+          res.status(201).json({ id: this.lastID });
+        }
+      );
     }
   );
 });
 
-// DELETE /projects/:id - delete a project
+// Delete a project
 app.delete('/api/projects/:id', (req, res) => {
-  const { id } = req.params;
-
-  db.run(`DELETE FROM projects WHERE id = ?`, [id], function (err) {
+  const projectId = req.params.id;
+  db.run('DELETE FROM projects WHERE id = ?', [projectId], function (err) {
     if (err) {
       console.error('Error deleting project:', err.message);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: 'Failed to delete project' });
     }
-    res.json({ deleted: this.changes });
+    res.json({ success: true });
   });
 });
 
-//temp test
-app.get('/api/debug-projects', (req, res) => {
-  db.all('SELECT * FROM projects LIMIT 5', (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: 'DB error' });
-    }
-    res.json(rows);
-  });
-});
-
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

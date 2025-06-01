@@ -8,11 +8,7 @@ import {
   Button,
   IconButton,
   Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
+  Alert,
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import ProjectList from './components/ProjectList';
@@ -27,43 +23,31 @@ const App = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [hoveringSidebar, setHoveringSidebar] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [pendingDelete, setPendingDelete] = useState(null);
-  const [deleteTimer, setDeleteTimer] = useState(null);
+  const [isSaveMode, setIsSaveMode] = useState(false);
+  const [pendingSession, setPendingSession] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState(null);
+
+  const [deletedProject, setDeletedProject] = useState(null);
+  const [undoTimeout, setUndoTimeout] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:3001/api/projects')
       .then((res) => res.json())
       .then((data) => {
-        const normalized = data
-          .map((p) => {
-            let parsedTags = [];
-            try {
-              parsedTags =
-                typeof p.tags === 'string'
-                  ? JSON.parse(p.tags)
-                  : Array.isArray(p.tags)
-                  ? p.tags
-                  : [];
-            } catch (err) {
-              console.warn(
-                `Failed to parse tags for project "${p.title}":`,
-                p.tags
-              );
-            }
-            return { ...p, tags: parsedTags };
-          })
-          .filter((p) => p.title && p.title.trim().length > 0);
+        const normalized = data.map((p) => ({
+          ...p,
+          tags:
+            typeof p.tags === 'string'
+              ? JSON.parse(p.tags)
+              : Array.isArray(p.tags)
+              ? p.tags
+              : [],
+        }));
         setProjects(normalized);
       })
-      .catch((err) => {
-        console.error('Failed to fetch projects:', err);
-      });
+      .catch((err) => console.error('Failed to fetch projects:', err));
   }, []);
 
   const handleAddProject = (data) => {
@@ -87,87 +71,140 @@ const App = () => {
           id: result.id,
           tags: data.tags || [],
         };
+
         setProjects((prev) => [saved, ...prev]);
         setSelectedProject(saved);
         setSelectedIndex(0);
         setIsAdding(false);
-      })
-      .catch((err) => console.error('Failed to add project:', err));
+
+        if (isSaveMode && pendingSession) {
+          const sessionToSend = {
+            ...pendingSession,
+            tags: JSON.stringify(pendingSession.tags || []),
+          };
+
+          fetch(
+            `http://localhost:3001/api/projects/${saved.id}/practice-sessions`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(sessionToSend),
+            }
+          )
+            .then((res) => {
+              if (!res.ok) throw new Error('Save failed');
+              return res.json();
+            })
+            .then(() => {
+              setSnackbarOpen(true);
+            })
+            .catch((err) => {
+              console.error('Failed to save session:', err);
+              alert('Save failed.');
+            })
+            .finally(() => {
+              setIsSaveMode(false);
+              setPendingSession(null);
+            });
+        } else {
+          setIsSaveMode(false);
+          setPendingSession(null);
+        }
+      });
   };
 
-  const handleUpdateProject = (index, updatedData) => {
-    const existing = projects[index];
-    const updated = {
-      ...existing,
-      ...updatedData,
-      tags: JSON.stringify(updatedData.tags || []),
-      lastUpdated: new Date().toISOString(),
+  const handleRequestSaveToProject = (session) => {
+    setIsSaveMode(true);
+    setPendingSession({
+      ...session,
+      label: session.label || '',
+      tags: session.tags || [],
+    });
+    setIsAdding(false);
+    setIsEditing(false);
+  };
+
+  const handleSaveToProject = (project) => {
+    if (!pendingSession) return;
+
+    const sessionToSend = {
+      ...pendingSession,
+      tags: JSON.stringify(pendingSession.tags || []),
     };
 
-    fetch(`http://localhost:3001/api/projects/${existing.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated),
-    })
-      .then(() => {
-        const updatedProjects = [...projects];
-        updatedProjects[index] = {
-          ...updated,
-          tags: updatedData.tags || [],
-        };
-        setProjects(updatedProjects);
-        setSelectedProject(updatedProjects[index]);
-        setIsEditing(false);
+    fetch(
+      `http://localhost:3001/api/projects/${project.id}/practice-sessions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sessionToSend),
+      }
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error('Save failed');
+        return res.json();
       })
-      .catch((err) => console.error('Failed to update project:', err));
+      .then(() => {
+        setSnackbarOpen(true);
+        const index = projects.findIndex((p) => p.id === project.id);
+        if (index !== -1) {
+          setSelectedProject(project);
+          setSelectedIndex(index);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to save session:', err);
+        alert('Save failed.');
+      })
+      .finally(() => {
+        setIsSaveMode(false);
+        setPendingSession(null);
+      });
   };
 
-  const confirmDeleteProject = (index) => {
-    setConfirmDeleteIndex(index);
-    setConfirmDialogOpen(true);
-  };
+  const handleDeleteProject = (index) => {
+    const projectToDelete = projects[index];
+    if (!projectToDelete) return;
 
-  const handleConfirmDelete = () => {
-    const index = confirmDeleteIndex;
-    const project = projects[index];
-    const updated = projects.filter((_, i) => i !== index);
-
+    const updated = [...projects];
+    updated.splice(index, 1);
     setProjects(updated);
     setSelectedProject(null);
     setSelectedIndex(null);
-    setPendingDelete(project);
-    setSnackbarOpen(true);
-    setConfirmDialogOpen(false);
 
-    const timer = setTimeout(() => {
-      fetch(`http://localhost:3001/api/projects/${project.id}`, {
+    setDeletedProject({ project: projectToDelete, index });
+
+    const timeout = setTimeout(() => {
+      fetch(`http://localhost:3001/api/projects/${projectToDelete.id}`, {
         method: 'DELETE',
-      }).catch((err) => console.error('Failed to delete project:', err));
-      setPendingDelete(null);
+      }).catch((err) => {
+        console.error('Failed to delete from DB:', err);
+      });
+      setDeletedProject(null);
+      setUndoTimeout(null);
     }, 5000);
 
-    setDeleteTimer(timer);
+    setUndoTimeout(timeout);
+    setSnackbarOpen(true);
   };
 
   const handleUndoDelete = () => {
-    if (deleteTimer) clearTimeout(deleteTimer);
-    if (pendingDelete) {
-      setProjects((prev) => [pendingDelete, ...prev]);
-    }
-    setPendingDelete(null);
-    setSnackbarOpen(false);
-  };
+    if (!deletedProject) return;
 
-  const handleEditProject = () => {
-    setIsEditing(true);
+    clearTimeout(undoTimeout);
+
+    const restored = [...projects];
+    restored.splice(deletedProject.index, 0, deletedProject.project);
+    setProjects(restored);
+
+    setDeletedProject(null);
+    setUndoTimeout(null);
+    setSnackbarOpen(false);
   };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar */}
       <Box
-        onMouseEnter={() => setHoveringSidebar(true)}
-        onMouseLeave={() => setHoveringSidebar(false)}
         sx={{
           width: sidebarOpen ? '280px' : '0',
           minWidth: sidebarOpen ? '280px' : '0',
@@ -175,49 +212,34 @@ const App = () => {
           transition: 'width 0.3s ease',
           overflow: 'hidden',
           borderRight: sidebarOpen ? '1px solid #ddd' : 'none',
-          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: '#fff',
         }}
       >
-        {/* Vertically centered sidebar collapse carat */}
-        {sidebarOpen && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              right: 0,
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-              backgroundColor: '#fff',
-              border: '1px solid #ddd',
-              borderRight: 'none',
-              borderRadius: '0 4px 4px 0',
-            }}
-          >
-            <IconButton onClick={() => setSidebarOpen(false)} size="small">
-              <ChevronLeft />
-            </IconButton>
-          </Box>
-        )}
-
-        {/* Timer Toolbar + Add Button + Project List */}
-        <TimerToolbar />
+        <TimerToolbar onRequestSaveToProject={handleRequestSaveToProject} />
 
         <Box
           sx={{
-            px: 2,
-            pt: 2,
-            pb: 1,
+            p: 2,
+            border: isSaveMode ? '3px solid #1976d2' : 'none',
+            borderRadius: 2,
+            backgroundColor: isSaveMode ? '#e3f2fd' : 'transparent',
+            flexGrow: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 1,
-            flexShrink: 0,
-            backgroundColor: '#fff',
-            zIndex: 1,
           }}
         >
+          {isSaveMode && (
+            <Alert
+              severity="info"
+              variant="outlined"
+              sx={{ mb: 2, fontSize: '0.875rem' }}
+            >
+              Select a project to save this session to, or use “Add New Project”
+            </Alert>
+          )}
+
           <Button
             variant="contained"
             color="primary"
@@ -228,33 +250,39 @@ const App = () => {
               setSelectedProject(null);
               setSelectedIndex(null);
             }}
+            sx={{ mb: 2 }}
           >
             Add New Project
           </Button>
-        </Box>
 
-        <Divider />
+          <Divider sx={{ mb: 2 }} />
 
-        <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
-          <ProjectList
-            projects={projects.filter((p) => {
-              const text = `${p.title} ${p.artist}`.toLowerCase();
-              return text.includes(searchTerm.toLowerCase());
-            })}
-            onSelect={(project, index) => {
-              setSelectedProject(project);
-              setSelectedIndex(index);
-              setIsAdding(false);
-              setIsEditing(false);
-            }}
-            selectedIndex={selectedIndex}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
+          <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
+            <ProjectList
+              projects={projects.filter((p) =>
+                `${p.title} ${p.artist}`
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+              )}
+              onSelect={(project, index) => {
+                if (isSaveMode) {
+                  handleSaveToProject(project);
+                } else {
+                  setSelectedProject(project);
+                  setSelectedIndex(index);
+                  setIsAdding(false);
+                  setIsEditing(false);
+                }
+              }}
+              onSaveToProject={isSaveMode ? handleSaveToProject : null}
+              selectedIndex={selectedIndex}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+            />
+          </Box>
         </Box>
       </Box>
 
-      {/* Sidebar collapsed view */}
       {!sidebarOpen && (
         <Box
           sx={{
@@ -273,25 +301,45 @@ const App = () => {
         </Box>
       )}
 
-      {/* Main Content */}
-      <Box
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Box sx={{ width: '100%', maxWidth: 800 }}>
+      <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+        <Box sx={{ width: '100%', maxWidth: 800, mx: 'auto' }}>
           {isAdding ? (
-            <ProjectForm
-              mode="add"
-              onSave={handleAddProject}
-              onCancel={() => setIsAdding(false)}
-            />
-          ) : isEditing ? (
+            <Box
+              sx={{
+                p: 3,
+                border: isSaveMode ? '3px solid #1976d2' : 'none',
+                borderRadius: 2,
+                backgroundColor: isSaveMode ? '#e3f2fd' : 'transparent',
+              }}
+            >
+              <ProjectForm
+                mode="add"
+                onSave={handleAddProject}
+                onCancel={() => setIsAdding(false)}
+              />
+              {isSaveMode && pendingSession && (
+                <Box
+                  sx={{
+                    mt: 4,
+                    px: 2,
+                    py: 1,
+                    borderTop: '1px solid #ccc',
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom>
+                    Practice Sessions
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {new Date(pendingSession.createdAt).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    {Math.floor(pendingSession.duration / 60000)}m{' '}
+                    {Math.floor((pendingSession.duration % 60000) / 1000)}s
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : isEditing && selectedProject ? (
             <ProjectForm
               mode="edit"
               initialData={selectedProject}
@@ -302,48 +350,29 @@ const App = () => {
             <ProjectDetail
               project={selectedProject}
               index={selectedIndex}
-              onEdit={handleEditProject}
-              onDelete={confirmDeleteProject}
+              onEdit={() => setIsEditing(true)}
+              onDelete={handleDeleteProject}
             />
           ) : (
-            <Typography variant="h6" sx={{ textAlign: 'center', mt: 4 }}>
+            <Typography variant="h6" align="center" sx={{ mt: 4 }}>
               Select a project to view details.
             </Typography>
           )}
         </Box>
       </Box>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={() => setConfirmDialogOpen(false)}
-      >
-        <DialogTitle>Delete Project?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this project? You can undo this
-            within a few seconds.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Undo Snackbar */}
       <Snackbar
         open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
         message="Project deleted"
         action={
-          <Button color="secondary" size="small" onClick={handleUndoDelete}>
-            UNDO
-          </Button>
+          deletedProject && (
+            <Button color="secondary" size="small" onClick={handleUndoDelete}>
+              UNDO
+            </Button>
+          )
         }
         autoHideDuration={5000}
-        onClose={() => setSnackbarOpen(false)}
       />
     </Box>
   );
